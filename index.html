@@ -329,18 +329,27 @@
           <div class="field"><input type="number" id="ideco" value="0" min="0" step="any"><span class="unit">万円</span></div>
         </div>
 
-        <p class="group-label">生命保険料（年間払込額・新制度）</p>
+        <p class="group-label">生命保険料（年間の支払保険料）</p>
+        <div class="note-box" style="margin-bottom:6px;">平成23年12月31日以前の契約が「旧」、平成24年1月1日以降が「新」。源泉徴収票の「生命保険料の金額の内訳」、確定申告書第二表の支払保険料欄に新旧別で載っています。</div>
         <div class="row">
-          <label for="seimeiIppan">一般生命保険料</label>
+          <label for="seimeiIppan">新生命保険料</label>
           <div class="field"><input type="number" id="seimeiIppan" value="0" min="0" step="any"><span class="unit">万円</span></div>
         </div>
         <div class="row">
-          <label for="seimeiKaigo">介護医療保険料</label>
+          <label for="seimeiIppanKyu">旧生命保険料</label>
+          <div class="field"><input type="number" id="seimeiIppanKyu" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+        <div class="row">
+          <label for="seimeiKaigo">介護医療保険料<span class="hint">新制度のみ</span></label>
           <div class="field"><input type="number" id="seimeiKaigo" value="0" min="0" step="any"><span class="unit">万円</span></div>
         </div>
         <div class="row">
-          <label for="seimeiNenkin">個人年金保険料</label>
+          <label for="seimeiNenkin">新個人年金保険料</label>
           <div class="field"><input type="number" id="seimeiNenkin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+        <div class="row">
+          <label for="seimeiNenkinKyu">旧個人年金保険料</label>
+          <div class="field"><input type="number" id="seimeiNenkinKyu" value="0" min="0" step="any"><span class="unit">万円</span></div>
         </div>
         <div class="row">
           <label for="jishin">地震保険料（年間）</label>
@@ -442,9 +451,14 @@ const PARAMS = {
   ],
   復興税率: 0.021,
   所得金額調整控除: { 給与下限: 8500000, 給与上限: 10000000, 率: 0.10, 併用上限: 100000 },
+  // 新旧併用時は「旧のみで計算」と「新＋旧（上限あり）」の有利な方
   生命保険料控除: {
-    所得税: { 表: [ {上限:20000, f:p=>p}, {上限:40000, f:p=>p/2+10000}, {上限:80000, f:p=>p/4+20000}, {f:()=>40000} ], 合計上限: 120000 },
-    住民税: { 表: [ {上限:12000, f:p=>p}, {上限:32000, f:p=>p/2+6000}, {上限:56000, f:p=>p/4+14000}, {f:()=>28000} ], 合計上限: 70000 },
+    所得税: { 新: [ {上限:20000, f:p=>p}, {上限:40000, f:p=>p/2+10000}, {上限:80000, f:p=>p/4+20000}, {f:()=>40000} ],
+              旧: [ {上限:25000, f:p=>p}, {上限:50000, f:p=>p/2+12500}, {上限:100000, f:p=>p/4+25000}, {f:()=>50000} ],
+              併用上限: 40000, 合計上限: 120000 },
+    住民税: { 新: [ {上限:12000, f:p=>p}, {上限:32000, f:p=>p/2+6000}, {上限:56000, f:p=>p/4+14000}, {f:()=>28000} ],
+              旧: [ {上限:15000, f:p=>p}, {上限:40000, f:p=>p/2+7500}, {上限:70000, f:p=>p/4+17500}, {f:()=>35000} ],
+              併用上限: 28000, 合計上限: 70000 },
   },
   地震保険料控除: { 所得税上限: 50000, 住民税率: 0.5, 住民税上限: 25000 },
   住宅ローン控除_住民税: { 率: 0.05, 上限: 97500 },
@@ -573,10 +587,16 @@ function calcFuyou(deps, juminzei){
     return s + (d.doukyo ? t.oya70doukyo : t.oya70betsu);
   }, 0);
 }
+// premiums = { ippanShin, ippanKyu, kaigo, nenkinShin, nenkinKyu }（円）
 function calcSeimei(premiums, juminzei){
   const p = juminzei ? PARAMS.生命保険料控除.住民税 : PARAMS.生命保険料控除.所得税;
-  const each = premiums.map(en => en<=0 ? 0 : Math.ceil(tableLookup(p.表, en).f(en)));
-  return Math.min(p.合計上限, each.reduce((a,b)=>a+b,0));
+  const one = (en, t) => en<=0 ? 0 : Math.ceil(tableLookup(t, en).f(en));
+  const kubun = (shin, kyu) => {
+    const s = one(shin, p.新), k = one(kyu, p.旧);
+    return (shin>0 && kyu>0) ? Math.max(k, Math.min(s + k, p.併用上限)) : s + k;
+  };
+  const total = kubun(premiums.ippanShin, premiums.ippanKyu) + kubun(premiums.nenkinShin, premiums.nenkinKyu) + one(premiums.kaigo, p.新);
+  return Math.min(p.合計上限, total);
 }
 function calcShotokuzei(kazei){
   const row = tableLookup(PARAMS.所得税速算表, kazei);
@@ -730,7 +750,7 @@ function calcAll(input){
 
   // --- 所得控除 ---
   const idecoEn = manToEn(koujo.idecoMan);
-  const premiums = [koujo.seimeiIppanMan, koujo.seimeiKaigoMan, koujo.seimeiNenkinMan].map(manToEn);
+  const premiums = { ippanShin: manToEn(koujo.seimeiIppanMan), ippanKyu: manToEn(koujo.seimeiIppanKyuMan), kaigo: manToEn(koujo.seimeiKaigoMan), nenkinShin: manToEn(koujo.seimeiNenkinMan), nenkinKyu: manToEn(koujo.seimeiNenkinKyuMan) };
   const jishinEn = manToEn(koujo.jishinMan);
   const sonotaEn = manToEn(koujo.sonotaMan);
 
@@ -905,7 +925,7 @@ function readInputs(){
     sonota: { getsugakuMan: num('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
     haigusha: hasHaigusha ? { nenshuMan: num('haigushaNenshu'), nenkinMan: num('haigushaNenkin'), sonotaMan: num('haigushaSonota'), age: parseInt($('haigushaAge').value)||0 } : null,
     koujo: {
-      idecoMan: num('ideco'), seimeiIppanMan: num('seimeiIppan'), seimeiKaigoMan: num('seimeiKaigo'), seimeiNenkinMan: num('seimeiNenkin'),
+      idecoMan: num('ideco'), seimeiIppanMan: num('seimeiIppan'), seimeiKaigoMan: num('seimeiKaigo'), seimeiNenkinMan: num('seimeiNenkin'), seimeiIppanKyuMan: num('seimeiIppanKyu'), seimeiNenkinKyuMan: num('seimeiNenkinKyu'),
       jishinMan: num('jishin'), sonotaMan: num('sonotaKoujo'), jutakuLoanMan: num('jutakuLoan'),
     },
     otherIncome: $('otherIncome').checked,
@@ -993,7 +1013,7 @@ function buildReport(inp, r){
   if(inp.nenkin.has) cond.push(['公的年金（年額）', `${fmt(inp.nenkin.nenkinMan)}万円`]);
   const k = inp.koujo;
   if(k.idecoMan>0) cond.push(['iDeCo・小規模企業共済', `${fmt(k.idecoMan)}万円`]);
-  const seimei = [['一般',k.seimeiIppanMan],['介護医療',k.seimeiKaigoMan],['個人年金',k.seimeiNenkinMan]].filter(([,v])=>v>0);
+  const seimei = [['新生命',k.seimeiIppanMan],['旧生命',k.seimeiIppanKyuMan],['介護医療',k.seimeiKaigoMan],['新個人年金',k.seimeiNenkinMan],['旧個人年金',k.seimeiNenkinKyuMan]].filter(([,v])=>v>0);
   if(seimei.length) cond.push(['生命保険料（年間）', seimei.map(([n,v])=>`${n} ${fmt(v)}万円`).join('、')]);
   if(k.jishinMan>0) cond.push(['地震保険料（年間）', `${fmt(k.jishinMan)}万円`]);
   if(k.sonotaMan>0) cond.push(['その他の所得控除', `${fmt(k.sonotaMan)}万円`]);
