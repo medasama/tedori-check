@@ -368,6 +368,10 @@
       </div>
 
       <button class="cta" id="calcBtn">診断する</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11.5px;color:#8B8F86;">
+        <span id="saveStatus">入力内容はこのブラウザに自動で保存されます</span>
+        <button type="button" id="clearBtn" style="border:none;background:none;color:var(--accent);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;">入力をクリア</button>
+      </div>
     </div>
 
     <div class="panel result-panel">
@@ -1159,6 +1163,64 @@ $('printBtn').addEventListener('click', ()=>{
   window.addEventListener('afterprint', ()=>{ document.title = prevTitle; }, { once:true });
   window.print();
 });
+
+// ===== 入力内容の保存・復元（このブラウザのみ） =====
+const STORE_KEY = 'tedori-shindan:v1';
+const TOGGLES = ['shahokenToggle','haigushaToggle','kodomoToggle','oyaToggle'];
+function snapshot(){
+  const fields = {};
+  document.querySelectorAll('#inputColumn input[id], #inputColumn select[id], #atena').forEach(el=>{
+    fields[el.id] = el.type==='checkbox' ? el.checked : el.value;
+  });
+  const toggles = {};
+  TOGGLES.forEach(id => toggles[id] = activeOf($(id)));
+  const deps = list => [...list.children].map(el=>({ age: el.querySelector('.dep-age').value, doukyo: el.querySelector('.dep-doukyo').value }));
+  return { fields, toggles, kodomo: deps(kodomoList), oya: deps(oyaList), savedAt: Date.now() };
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(snapshot())); }catch(e){}
+}
+function restoreState(){
+  let st = null;
+  try{ st = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); }catch(e){}
+  if(!st) return false;
+  // 入力欄・チェックボックス（先に戻し、トグルは後で上書き）
+  Object.entries(st.fields || {}).forEach(([id, v])=>{
+    const el = $(id); if(!el) return;
+    if(el.type==='checkbox'){ el.checked = !!v; el.dispatchEvent(new Event('change')); }
+    else el.value = v;
+  });
+  // トグル（クリックで画面の開閉も同期させる）
+  Object.entries(st.toggles || {}).forEach(([id, v])=>{
+    const btn = $(id) && $(id).querySelector(`button[data-v="${v}"]`);
+    if(btn) btn.click();
+  });
+  // 扶養家族の一覧
+  const rebuild = (list, items) => {
+    list.innerHTML = '';
+    (items||[]).forEach(d => addDepRow(list, d.age, d.doukyo === 'yes'));
+  };
+  if(st.toggles && st.toggles.kodomoToggle === 'yes') rebuild(kodomoList, st.kodomo);
+  if(st.toggles && st.toggles.oyaToggle === 'yes') rebuild(oyaList, st.oya);
+  if(st.savedAt){
+    const d = new Date(st.savedAt);
+    $('saveStatus').textContent = `前回の入力を復元しました（${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}保存）`;
+  }
+  return true;
+}
+let saveTimer = null;
+const scheduleSave = ()=>{ clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 300); };
+document.addEventListener('input', scheduleSave);
+document.addEventListener('change', scheduleSave);
+document.addEventListener('click', e=>{ if(e.target.closest('.toggle button, .add-btn, .del')) scheduleSave(); });
+window.addEventListener('pagehide', saveState);
+$('clearBtn').addEventListener('click', ()=>{
+  if(!confirm('入力内容をすべて消して初期状態に戻しますか？')) return;
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  window.removeEventListener('pagehide', saveState);
+  location.reload();
+});
+restoreState();
 </script>
 </body>
 </html>
