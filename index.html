@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手取り診断</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@600;700&family=Noto+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --ink:#16233F; --ink-soft:#3C4A66; --paper:#F5F6F2; --panel:#FFFFFF;
+    --line:#D9DCD3; --ledger:#E7EAE2; --accent:#B23A2E; --accent-soft:#F1DEDA;
+    --good:#2F6F5E; --warn-bg:#FBF2DE; --warn-text:#7A5B12;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Noto Sans JP',sans-serif;line-height:1.6;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px;}
+  header{margin-bottom:28px;}
+  .eyebrow{font-size:12px;letter-spacing:.18em;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+  h1{font-family:'Zen Old Mincho',serif;font-size:clamp(24px,4vw,34px);margin:0 0 8px;font-weight:700;letter-spacing:.02em;}
+  .sub{color:var(--ink-soft);font-size:14px;max-width:680px;}
+  .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:start;}
+  @media (max-width:900px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:24px 26px;}
+  .panel + .panel{margin-top:20px;}
+  @media (max-width:520px){.panel{padding:18px 16px;}}
+  .panel-title{font-size:13px;font-weight:700;color:var(--ink-soft);letter-spacing:.06em;margin:0 0 16px;display:flex;align-items:center;gap:8px;}
+  .panel-title::before{content:'';width:14px;height:1px;background:var(--accent);display:inline-block;}
+  .group-label{font-size:12px;font-weight:700;color:var(--ink-soft);margin:16px 0 0;padding-top:12px;border-top:1px dashed var(--line);}
+
+  .source{border:1px solid var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden;}
+  .source:last-child{margin-bottom:0;}
+  .source-head{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--paper);cursor:pointer;user-select:none;}
+  .source-head input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);}
+  .source-head .name{font-weight:600;font-size:14px;}
+  .source-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .source-body.open{max-height:520px;}
+  .source-inner{padding:14px 16px 16px;border-top:1px solid var(--line);}
+
+  .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--ledger);}
+  .row:last-child{border-bottom:none;}
+  .row label{font-size:14px;color:var(--ink);font-weight:500;flex:0 1 auto;}
+  .row .hint{display:block;font-size:11px;color:#8B8F86;font-weight:400;margin-top:3px;line-height:1.5;}
+  .field{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+  input[type=number],input[type=text],select{
+    font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;
+    border:1px solid var(--line);border-radius:3px;padding:7px 9px;width:110px;
+    text-align:right;background:#FCFCFA;color:var(--ink);
+  }
+  input[type=text]{font-family:'Noto Sans JP',sans-serif;text-align:left;width:180px;}
+  select{text-align:left;width:auto;font-family:'Noto Sans JP',sans-serif;}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .unit{font-size:12px;color:var(--ink-soft);min-width:2.5em;}
+  .toggle{display:flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+  .toggle button{border:none;background:#FCFCFA;color:var(--ink-soft);font-family:'Noto Sans JP',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;}
+  .toggle button.active{background:var(--ink);color:#fff;}
+  .note-box{margin-top:8px;font-size:11.5px;color:#8B8F86;line-height:1.6;background:var(--paper);border-radius:3px;padding:8px 10px;}
+
+  .dep-list{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+  .dep-item{display:grid;grid-template-columns:90px 1fr auto;gap:8px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:8px 10px;}
+  .dep-item select, .dep-item input{width:100%;}
+  .dep-item .del{border:none;background:none;color:var(--accent);font-size:16px;cursor:pointer;padding:0 4px;}
+  .add-btn{margin-top:10px;font-size:13px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:3px;padding:8px 14px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+  .checkline{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink-soft);margin-top:14px;}
+  .cta{margin-top:22px;width:100%;padding:14px;border:none;border-radius:3px;background:var(--ink);color:#fff;font-size:15px;font-weight:700;letter-spacing:.05em;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+  .cta:hover{background:var(--accent);}
+
+  .result-panel{position:relative;overflow:hidden;}
+  @media (min-width:901px){.result-panel{position:sticky;top:16px;}}
+  .stamp{position:absolute;top:18px;right:18px;width:64px;height:64px;border-radius:50%;border:2.5px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Zen Old Mincho',serif;font-size:13px;font-weight:700;letter-spacing:.1em;transform:rotate(-11deg) scale(.6);opacity:0;transition:transform .45s cubic-bezier(.2,1.4,.4,1), opacity .3s;writing-mode:vertical-rl;padding:6px 0;}
+  .stamp.show{transform:rotate(-11deg) scale(1);opacity:.9;}
+  .headline{margin-bottom:18px;}
+  .headline .label{font-size:12px;color:var(--ink-soft);letter-spacing:.05em;}
+  .headline .value{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:40px;color:var(--good);line-height:1.1;margin-top:4px;}
+  .headline .value span{font-size:16px;font-weight:500;margin-left:4px;color:var(--ink-soft);}
+  .headline .monthly{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .breakdown{display:flex;flex-direction:column;}
+  .breakdown .brow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--ledger);font-size:13px;}
+  .breakdown .brow:last-child{border-bottom:none;}
+  .breakdown .bval{font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .brow.clickable{cursor:pointer;user-select:none;}
+  .brow.clickable .bkey{display:flex;align-items:center;gap:5px;}
+  .brow.clickable .chevron{font-size:10px;color:var(--ink-soft);transition:transform .2s;display:inline-block;}
+  .brow.clickable.open .chevron{transform:rotate(90deg);}
+  .sub-breakdown{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .sub-breakdown.open{max-height:320px;}
+  .sub-breakdown .srow{display:flex;justify-content:space-between;padding:6px 0 6px 16px;font-size:12px;color:var(--ink-soft);border-bottom:1px dashed var(--ledger);}
+  .sub-breakdown .srow .sval{font-family:'JetBrains Mono',monospace;}
+  .warn{margin-top:12px;background:var(--warn-bg);color:var(--warn-text);border-radius:3px;padding:10px 12px;font-size:12px;line-height:1.6;}
+  .info{margin-top:12px;background:var(--paper);color:var(--ink-soft);border-radius:3px;padding:10px 12px;font-size:12px;line-height:1.6;}
+  .note{margin-top:18px;font-size:11.5px;color:#8B8F86;line-height:1.7;}
+  .placeholder{color:#9CA098;font-size:13px;padding:30px 0;text-align:center;}
+
+  .pdf-box{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .pdf-box .row{border-bottom:none;padding:0 0 12px;}
+  .pdf-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .pdf-btn{flex:1 1 160px;padding:12px;border-radius:3px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:.04em;}
+  .pdf-btn.primary{border:none;background:var(--accent);color:#fff;}
+  .pdf-btn.secondary{border:1px solid var(--ink);background:#fff;color:var(--ink);}
+  .pdf-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .pdf-status{font-size:11.5px;color:#8B8F86;margin-top:8px;min-height:1em;}
+
+  /* ===== PDF用レポート（画面外。html2pdfには中の#reportを渡す） ===== */
+  #reportHost{position:fixed;left:-10000px;top:0;}
+  #report{width:720px;background:#fff;color:#16233F;font-family:'Noto Sans JP',sans-serif;padding:8px 4px;line-height:1.55;}
+  #report .rp-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #16233F;padding-bottom:10px;}
+  #report .rp-eyebrow{font-size:10px;letter-spacing:.18em;color:#B23A2E;font-weight:700;}
+  #report .rp-title{font-family:'Zen Old Mincho',serif;font-size:24px;font-weight:700;margin:2px 0 0;}
+  #report .rp-meta{font-size:11px;color:#3C4A66;text-align:right;}
+  #report .rp-meta .rp-name{font-size:15px;color:#16233F;font-weight:600;margin-bottom:2px;}
+  #report .rp-headline{margin:12px 0 2px;padding:10px 16px;background:#F5F6F2;border-left:4px solid #2F6F5E;display:flex;justify-content:space-between;align-items:baseline;}
+  #report .rp-headline .l{font-size:12px;color:#3C4A66;}
+  #report .rp-headline .v{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:#2F6F5E;}
+  #report .rp-headline .v span{font-size:13px;color:#3C4A66;font-weight:500;margin-left:4px;}
+  #report .rp-headline .m{font-size:11.5px;color:#3C4A66;text-align:right;}
+  #report h3{font-size:12.5px;color:#3C4A66;letter-spacing:.06em;margin:12px 0 3px;padding-bottom:4px;border-bottom:1px solid #D9DCD3;}
+  #report table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  #report td{padding:3px 4px;border-bottom:1px solid #E7EAE2;vertical-align:top;}
+  #report td.k{color:#3C4A66;width:44%;}
+  #report td.n{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600;}
+  #report tr.sub td{font-size:10.5px;color:#3C4A66;padding:3px 4px 3px 18px;border-bottom:1px dashed #E7EAE2;}
+  #report tr.sub td.n{font-weight:500;}
+  #report tr.total td{border-top:2px solid #16233F;border-bottom:none;font-weight:700;padding-top:8px;}
+  #report tr.total td.n{color:#2F6F5E;font-size:14px;}
+  #report .rp-warn{margin-top:6px;background:#FBF2DE;color:#7A5B12;padding:7px 10px;font-size:10.5px;border-radius:3px;}
+  #report .rp-info{margin-top:6px;background:#F5F6F2;color:#3C4A66;padding:7px 10px;font-size:10.5px;border-radius:3px;}
+  #report .rp-note{margin-top:8px;font-size:8px;color:#8B8F86;line-height:1.55;}
+  #report .rp-foot{margin-top:10px;padding-top:6px;border-top:1px solid #D9DCD3;font-size:10px;color:#8B8F86;display:flex;justify-content:space-between;}
+  #report .avoid{page-break-inside:avoid;break-inside:avoid;}
+
+  @media print{
+    @page{size:A4 portrait;margin:12mm;}
+    body{background:#fff;}
+    .wrap{display:none !important;}
+    #reportHost{position:static;left:auto;}
+    #report{width:auto;padding:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>手取り診断</h1>
+  </header>
+
+  <div class="grid">
+    <div id="inputColumn">
+      <div class="panel">
+        <p class="panel-title">基本情報</p>
+        <div class="row">
+          <label for="age">年齢<span class="hint">その年の12月31日時点の年齢</span></label>
+          <div class="field"><input type="number" id="age" value="40" min="15" max="110"><span class="unit">歳</span></div>
+        </div>
+        <div class="row">
+          <label>健康保険の種類<span class="hint">75歳以上は自動的に後期高齢者医療で計算します</span></label>
+          <div class="toggle" id="shahokenToggle">
+            <button type="button" data-v="shakaihoken" class="active">社保</button>
+            <button type="button" data-v="kokuho">国保</button>
+            <button type="button" data-v="sonota">その他</button>
+          </div>
+        </div>
+        <div id="shahoRows">
+          <div class="row">
+            <label for="kenpoRitsu">健康保険料率（労使合計）<span class="hint">初期値は協会けんぽ兵庫支部（令和8年度）。組合健保の方は給与明細・組合の案内の料率に書き換え（介護・子ども支援金分は含めない）</span></label>
+            <div class="field"><input type="number" id="kenpoRitsu" value="10.12" min="0" step="any"><span class="unit">%</span></div>
+          </div>
+        </div>
+        <div id="sonotaRows" style="display:none;">
+          <div class="row">
+            <label for="sonotaGetsugaku">標準報酬月額<span class="hint">特例退職・任意継続の通知書に記載の金額（初期値はパナソニック健保モデル）</span></label>
+            <div class="field"><input type="number" id="sonotaGetsugaku" value="28" min="0" step="any"><span class="unit">万円</span></div>
+          </div>
+          <div class="row">
+            <label for="sonotaRitsu">健康保険料率<span class="hint">通知書の料率（全額自己負担。介護・子ども支援金分は含めない）</span></label>
+            <div class="field"><input type="number" id="sonotaRitsu" value="10.0" min="0" step="any"><span class="unit">%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">配偶者</p>
+        <div class="row">
+          <label>配偶者</label>
+          <div class="toggle" id="haigushaToggle">
+            <button type="button" data-v="none" class="active">なし</button>
+            <button type="button" data-v="yes">あり</button>
+          </div>
+        </div>
+        <div id="haigushaRows" style="display:none;">
+          <div class="row">
+            <label for="haigushaAge">配偶者の年齢<span class="hint">年金の控除額（65歳）・老人配偶者控除（70歳）の判定に使います</span></label>
+            <div class="field"><input type="number" id="haigushaAge" value="40" min="15" max="110"><span class="unit">歳</span></div>
+          </div>
+          <div class="row">
+            <label for="haigushaNenshu">配偶者の給与収入<span class="hint">額面。なければ0</span></label>
+            <div class="field"><input type="number" id="haigushaNenshu" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          </div>
+          <div class="row">
+            <label for="haigushaNenkin">配偶者の公的年金収入<span class="hint">年金の年額（控除前）。遺族・障害年金は非課税なので入れない</span></label>
+            <div class="field"><input type="number" id="haigushaNenkin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          </div>
+          <div class="row">
+            <label for="haigushaSonota">配偶者のその他の所得<span class="hint">事業所得・雑所得など（経費差引後の所得金額）</span></label>
+            <div class="field"><input type="number" id="haigushaSonota" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">子・扶養家族</p>
+        <div class="row">
+          <label>子<span class="hint">扶養している子（年齢・同居/別居）</span></label>
+          <div class="toggle" id="kodomoToggle">
+            <button type="button" data-v="none" class="active">なし</button>
+            <button type="button" data-v="yes">あり</button>
+          </div>
+        </div>
+        <div id="kodomoSection" style="display:none;">
+          <div class="dep-list" id="kodomoList"></div>
+          <button type="button" class="add-btn" id="addKodomo">＋ 子を追加</button>
+        </div>
+
+        <div class="row" style="margin-top:16px;">
+          <label>その他の扶養家族<span class="hint">親などが扶養に入っている場合</span></label>
+          <div class="toggle" id="oyaToggle">
+            <button type="button" data-v="none" class="active">なし</button>
+            <button type="button" data-v="yes">あり</button>
+          </div>
+        </div>
+        <div id="oyaSection" style="display:none;">
+          <div class="dep-list" id="oyaList"></div>
+          <button type="button" class="add-btn" id="addOya">＋ 扶養家族を追加</button>
+        </div>
+
+        <div class="note-box">※扶養家族は所得要件（合計所得62万円以下）を満たしている前提で計算します。</div>
+        <div class="checkline">
+          <input type="checkbox" id="otherIncome" style="margin-top:3px;">
+          <label for="otherIncome">不動産・配当・譲渡などの他の所得がある（この診断には含まれません）</label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">収入源（該当するものにチェック）</p>
+
+        <div class="source">
+          <div class="source-head" data-target="src-kyuyo">
+            <input type="checkbox" id="has-kyuyo" checked>
+            <span class="name">給与所得</span>
+          </div>
+          <div class="source-body open" id="src-kyuyo">
+            <div class="source-inner">
+              <div class="row">
+                <label for="nenshu">額面年収<span class="hint">源泉徴収票の「支払金額」欄。2ヶ所以上お勤めの場合は合計額</span></label>
+                <div class="field"><input type="number" id="nenshu" value="500" min="0" step="any"><span class="unit">万円</span></div>
+              </div>
+              <div class="row">
+                <label for="shoyo">うち賞与（年間）<span class="hint">任意。社会保険料の上限計算に使います。わからなければ0</span></label>
+                <div class="field"><input type="number" id="shoyo" value="0" min="0" step="any"><span class="unit">万円</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="source">
+          <div class="source-head" data-target="src-jigyo">
+            <input type="checkbox" id="has-jigyo">
+            <span class="name">事業所得</span>
+          </div>
+          <div class="source-body" id="src-jigyo">
+            <div class="source-inner">
+              <div class="row">
+                <label for="jigyoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の「事業」欄（経費差引後・控除前の金額）</span></label>
+                <div class="field"><input type="number" id="jigyoShotoku" value="0" min="0" step="any"><span class="unit">万円</span></div>
+              </div>
+              <div class="row">
+                <label for="jigyozeiRitsu">個人事業税<span class="hint">法定業種なら選択（多くの業種は5%）。事業主控除290万円を差し引いて計算</span></label>
+                <div class="field">
+                  <select id="jigyozeiRitsu">
+                    <option value="0">対象外</option>
+                    <option value="0.05">5%</option>
+                    <option value="0.04">4%</option>
+                    <option value="0.03">3%</option>
+                  </select>
+                </div>
+              </div>
+              <div class="note-box">※ここでの手取りは「所得金額」を基にした税務上の目安です。減価償却費や売掛金の状況により、実際に使える現金とはズレる場合があります。専従者給与がある場合は要調整（本ツール未対応）。個人事業税は青色申告特別控除を差し引く前の所得にかかるため、青色申告の方は実際より少なめに出ます。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="source">
+          <div class="source-head" data-target="src-zassho">
+            <input type="checkbox" id="has-zassho">
+            <span class="name">雑所得（業務・副業など）</span>
+          </div>
+          <div class="source-body" id="src-zassho">
+            <div class="source-inner">
+              <div class="row">
+                <label for="zasshoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の「雑：業務」欄（経費差引後・控除前の金額）</span></label>
+                <div class="field"><input type="number" id="zasshoShotoku" value="0" min="0" step="any"><span class="unit">万円</span></div>
+              </div>
+              <div class="note-box">※事業所得と同様の扱いですが、赤字が出た場合に他の所得と相殺（損益通算）できない点が異なります（本ツールは黒字前提のため計算への影響はありません）。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="source">
+          <div class="source-head" data-target="src-nenkin">
+            <input type="checkbox" id="has-nenkin">
+            <span class="name">公的年金</span>
+          </div>
+          <div class="source-body" id="src-nenkin">
+            <div class="source-inner">
+              <div class="row">
+                <label for="nenkinGaku">年金の年額<span class="hint">老齢年金・企業年金など。年金振込通知書・年金額改定通知書の「年金支払額」欄（控除前）を<strong>万円</strong>で。例：1,876,500円 → 187.65。遺族年金・障害年金は非課税なので入れない</span></label>
+                <div class="field"><input type="number" id="nenkinGaku" value="0" min="0" step="any"><span class="unit">万円</span></div>
+              </div>
+              <div class="note-box">※年金振込通知書に「控除後振込額」の記載があれば、それが手取りそのものです。お持ちであれば計算より先にそちらをご確認ください。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">その他控除（任意）</p>
+        <div class="row">
+          <label for="ideco">iDeCo・小規模企業共済の掛金<span class="hint">年間拠出額</span></label>
+          <div class="field"><input type="number" id="ideco" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+
+        <p class="group-label">生命保険料（年間払込額・新制度）</p>
+        <div class="row">
+          <label for="seimeiIppan">一般生命保険料</label>
+          <div class="field"><input type="number" id="seimeiIppan" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+        <div class="row">
+          <label for="seimeiKaigo">介護医療保険料</label>
+          <div class="field"><input type="number" id="seimeiKaigo" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+        <div class="row">
+          <label for="seimeiNenkin">個人年金保険料</label>
+          <div class="field"><input type="number" id="seimeiNenkin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+        <div class="row">
+          <label for="jishin">地震保険料（年間）</label>
+          <div class="field"><input type="number" id="jishin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+
+        <p class="group-label">その他</p>
+        <div class="row">
+          <label for="sonotaKoujo">その他の所得控除<span class="hint">医療費控除など（所得税・住民税で同額のもの）</span></label>
+          <div class="field"><input type="number" id="sonotaKoujo" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+        <div class="row">
+          <label for="jutakuLoan">住宅ローン控除額<span class="hint">年末調整・確定申告での控除額（年末残高×0.7%など）。所得税で引ききれない分は住民税から</span></label>
+          <div class="field"><input type="number" id="jutakuLoan" value="0" min="0" step="any"><span class="unit">万円</span></div>
+        </div>
+      </div>
+
+      <button class="cta" id="calcBtn">診断する</button>
+    </div>
+
+    <div class="panel result-panel">
+      <div class="stamp" id="stamp">診断済</div>
+      <p class="panel-title">診断結果</p>
+      <div id="resultBody">
+        <p class="placeholder">左の項目を入力して「診断する」を押してください</p>
+      </div>
+
+      <div class="pdf-box">
+        <p class="panel-title">PDFで保存</p>
+        <div class="row">
+          <label for="atena">宛名<span class="hint">任意。PDFの右上に「〇〇 様」と入ります</span></label>
+          <div class="field"><input type="text" id="atena" placeholder="例：山田 太郎"></div>
+        </div>
+        <div class="pdf-btns">
+          <button type="button" class="pdf-btn primary" id="pdfBtn" disabled>PDFをダウンロード</button>
+          <button type="button" class="pdf-btn secondary" id="printBtn" disabled>印刷・PDF（ブラウザ機能）</button>
+        </div>
+        <div class="pdf-status" id="pdfStatus">診断後にPDFを保存できます。保存時には現在の入力内容で再計算します。</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note" id="disclaimerText">本ツールの税額・社会保険料は概算です。所得税は令和8年分（令和8年度税制改正後）、住民税はその所得に対して課税される令和9年度分を想定しています（住民税は実際には翌年度に課税されます）。社会保険料は令和8年度の料率（協会けんぽ兵庫支部・芦屋市国民健康保険・兵庫県後期高齢者医療・芦屋市介護保険）を基にした概算で、芦屋市以外の方は目安精度が落ちます。国保・後期高齢者医療は「本人が世帯主で、加入者は本人のみ」として計算しています。ひとり親・寡婦・障害者控除、ふるさと納税、不動産・配当・譲渡所得、高齢任意加入（70歳以上で年金の受給資格期間を満たしていない方の厚生年金への任意加入）、会社都合退職などによる国民健康保険料の軽減（非自発的失業者軽減）は対象外です。遺族年金・障害年金は非課税のため、年金の入力には含めないでください。公的年金等控除は令和8年分の規定で計算しています（令和9年分からは、給与と年金の両方がある方について給与所得控除と公的年金等控除の合計に上限が設けられる予定です）。正式な金額は源泉徴収票・住民税決定通知書・各保険料決定通知書等でご確認ください。</p>
+</div>
+
+<div id="reportHost"><div id="report"></div></div>
+
+<script>
+// ===== 出力設定 =====
+// PDFの左下に入る作成者名。空欄なら表示しない（例：'久山行政書士事務所'）
+const OFFICE_NAME = '';
+
+// ===== パラメータ =====
+// 年次更新時はこのブロックだけ編集すればよい。
+const PARAMS = {
+  // 令和8年分（令和8・9年の特例で最低保障74万円）
+  給与所得控除: [
+    { 収入上限: 2200000, 控除額: 740000 },
+    { 収入上限: 3600000, 計算式: (n)=> n*0.30+80000 },
+    { 収入上限: 6600000, 計算式: (n)=> n*0.20+440000 },
+    { 収入上限: 8500000, 計算式: (n)=> n*0.10+1100000 },
+    { 控除額: 1950000 },
+  ],
+  // 令和8年分：本則62万＋特例（489万以下+42万、655万以下+5万）
+  基礎控除: [
+    { 上限: 4890000, 額: 1040000 },
+    { 上限: 6550000, 額: 670000 },
+    { 上限: 23500000, 額: 620000 },
+    { 上限: 24000000, 額: 480000 },
+    { 上限: 24500000, 額: 320000 },
+    { 上限: 25000000, 額: 160000 },
+    { 額: 0 },
+  ],
+  配偶者控除: {
+    所得要件: 620000,
+    一般: { c900: 380000, c950: 260000, c1000: 130000 },
+    老人: { c900: 480000, c950: 320000, c1000: 160000 },
+    特別控除表: [
+      { 下限: 620001, 上限: 950000, c900: 380000, c950: 260000, c1000: 130000 },
+      { 下限: 950001, 上限: 1000000, c900: 360000, c950: 240000, c1000: 120000 },
+      { 下限: 1000001, 上限: 1050000, c900: 310000, c950: 210000, c1000: 110000 },
+      { 下限: 1050001, 上限: 1100000, c900: 260000, c950: 180000, c1000: 90000 },
+      { 下限: 1100001, 上限: 1150000, c900: 210000, c950: 140000, c1000: 70000 },
+      { 下限: 1150001, 上限: 1200000, c900: 160000, c950: 110000, c1000: 60000 },
+      { 下限: 1200001, 上限: 1250000, c900: 110000, c950: 80000, c1000: 40000 },
+      { 下限: 1250001, 上限: 1300000, c900: 60000, c950: 40000, c1000: 20000 },
+      { 下限: 1300001, 上限: 1330000, c900: 30000, c950: 20000, c1000: 10000 },
+    ]
+  },
+  扶養控除: { c16_18:380000, c19_22:630000, c23plus:380000, oya70doukyo:580000, oya70betsu:480000 },
+  所得税速算表: [
+    { 上限: 1949000, 税率:0.05, 控除:0 },
+    { 上限: 3299000, 税率:0.10, 控除:97500 },
+    { 上限: 6949000, 税率:0.20, 控除:427500 },
+    { 上限: 8999000, 税率:0.23, 控除:636000 },
+    { 上限: 17999000, 税率:0.33, 控除:1536000 },
+    { 上限: 39999000, 税率:0.40, 控除:2796000 },
+    { 税率:0.45, 控除:4796000 },
+  ],
+  復興税率: 0.021,
+  所得金額調整控除: { 給与下限: 8500000, 給与上限: 10000000, 率: 0.10, 併用上限: 100000 },
+  生命保険料控除: {
+    所得税: { 表: [ {上限:20000, f:p=>p}, {上限:40000, f:p=>p/2+10000}, {上限:80000, f:p=>p/4+20000}, {f:()=>40000} ], 合計上限: 120000 },
+    住民税: { 表: [ {上限:12000, f:p=>p}, {上限:32000, f:p=>p/2+6000}, {上限:56000, f:p=>p/4+14000}, {f:()=>28000} ], 合計上限: 70000 },
+  },
+  地震保険料控除: { 所得税上限: 50000, 住民税率: 0.5, 住民税上限: 25000 },
+  住宅ローン控除_住民税: { 率: 0.05, 上限: 97500 },
+  住民税: {
+    税率: 0.10,
+    均等割: 5800, // 芦屋市：市3,000＋県1,800（県民緑税800含む）＋森林環境税1,000
+    基礎控除: [ { 上限: 24000000, 額: 430000 }, { 上限: 24500000, 額: 290000 }, { 上限: 25000000, 額: 150000 }, { 額: 0 } ],
+    扶養控除: { c16_18:330000, c19_22:450000, c23plus:330000, oya70doukyo:450000, oya70betsu:380000 },
+    配偶者控除: { c900: 330000, c950: 220000, c1000: 110000 },
+    老人配偶者控除: { c900: 380000, c950: 260000, c1000: 130000 },
+    調整控除_人的控除差: { 基礎:50000, 配偶者:50000, 老人配偶者:100000, 扶養一般:50000, 特定扶養:180000, 老人扶養:100000, 同居老親:130000 },
+    非課税: { 一人当たり:350000, 加算:100000, 均等割_扶養あり加算:210000, 所得割_扶養あり加算:320000 },
+  },
+  社保: {
+    健保料率既定: 0.1012,     // 協会けんぽ兵庫 令和8年度
+    子ども支援金率: 0.0023,   // 令和8年4月分〜
+    介護率: 0.0162,           // 40〜64歳
+    厚年率: 0.183,            // 70歳未満
+    雇用率_本人: 0.005,        // 一般の事業 令和8年度
+    健保月額上限: 1390000, 健保賞与年上限: 5730000,
+    厚年月額上限: 650000, 厚年賞与1回上限: 1500000, 賞与回数想定: 2,
+  },
+  年金控除: {
+    "65+": [
+      { 収入上限: 3300000, 控除額: 1100000 },
+      { 収入上限: 4100000, 計算式: (n)=> n*0.25+275000 },
+      { 収入上限: 7700000, 計算式: (n)=> n*0.15+685000 },
+      { 収入上限: 10000000, 計算式: (n)=> n*0.05+1455000 },
+      { 控除額: 1955000 },
+    ],
+    "65-": [
+      { 収入上限: 1300000, 控除額: 600000 },
+      { 収入上限: 4100000, 計算式: (n)=> n*0.25+275000 },
+      { 収入上限: 7700000, 計算式: (n)=> n*0.15+685000 },
+      { 収入上限: 10000000, 計算式: (n)=> n*0.05+1455000 },
+      { 控除額: 1955000 },
+    ],
+    // 公的年金等以外の合計所得金額による減額
+    他所得減額: [ { 超: 20000000, 減額: 200000 }, { 超: 10000000, 減額: 100000 } ],
+  },
+  // 芦屋市 令和8年度（子ども分の均等割は1,260円＋18歳以上均等割60円）
+  国保_芦屋市: {
+    医療:   { 率:0.076, 均等:33480, 平等:20460, 上限:670000 },
+    支援:   { 率:0.031, 均等:12720, 平等:8640,  上限:260000 },
+    介護:   { 率:0.028, 均等:13920, 平等:6960,  上限:170000 },
+    子ども: { 率:0.003, 均等:1320,  平等:780,   上限:30000 },
+  },
+  // 兵庫県後期高齢者医療 令和8年度
+  後期_兵庫: {
+    医療:   { 率:0.1077, 均等:58427, 上限:850000, 七割軽減率:0.72 },
+    子ども: { 率:0.0024, 均等:1351,  上限:21000,  七割軽減率:0.70 },
+  },
+  // 均等割（・平等割）軽減の判定基準（令和8年度、全国一律）
+  軽減判定: { 基礎: 430000, 五割加算: 310000, 二割加算: 570000, 年金特別控除65: 150000 },
+  国民年金_年額: 215040, // 令和8年度 月17,920円
+  // 芦屋市 65歳以上の介護保険料（令和8年度）
+  介護1号_芦屋市: {
+    段階年額: [21240,36000,50880,64800,74160,81480,92640,111240,126000,140880,155640,170520,177960,185400,192720,200160,207600,215040],
+    低所得基準1: 826500, 低所得基準2: 1200000,
+    課税者境界: [1200000,2100000,3200000,4200000,5200000,6200000,7200000,8200000,9200000,10000000,12500000,15000000],
+  },
+  個人事業税: { 事業主控除: 2900000 },
+};
+
+// ===== 計算ロジック =====
+const manToEn = m => Math.round((m||0)*10000);
+const enToMan = e => Math.round(e/1000)/10;
+const chopSen = e => Math.floor(e/1000)*1000;
+const tableLookup = (table, v, keyUpper='上限') => table.find(r => v <= (r[keyUpper] ?? Infinity));
+
+function calcKyuyoKoujo(en){
+  const row = tableLookup(PARAMS.給与所得控除, en, '収入上限');
+  return row.控除額!=null ? row.控除額 : Math.round(row.計算式(en));
+}
+function calcNenkinKoujo(en, age, otherShotoku){
+  const row = tableLookup(age>=65 ? PARAMS.年金控除["65+"] : PARAMS.年金控除["65-"], en, '収入上限');
+  let k = row.控除額!=null ? row.控除額 : Math.round(row.計算式(en));
+  const red = PARAMS.年金控除.他所得減額.find(r => otherShotoku > r.超);
+  if(red) k = Math.max(0, k - red.減額);
+  return k;
+}
+// 給与・公的年金・その他所得から合計所得金額を出す（所得金額調整控除②を含む）
+function calcGoukeiShotoku({ kyuyoEn=0, nenkinEn=0, sonotaEn=0, age }){
+  let kyuyoShotoku = kyuyoEn>0 ? Math.max(0, kyuyoEn - calcKyuyoKoujo(kyuyoEn)) : 0;
+  const nenkinShotoku = nenkinEn>0 ? Math.max(0, nenkinEn - calcNenkinKoujo(nenkinEn, age, kyuyoShotoku + sonotaEn)) : 0;
+  if(kyuyoShotoku>0 && nenkinShotoku>0){
+    const C = PARAMS.所得金額調整控除;
+    kyuyoShotoku -= Math.max(0, Math.min(kyuyoShotoku, C.併用上限) + Math.min(nenkinShotoku, C.併用上限) - C.併用上限);
+  }
+  return kyuyoShotoku + nenkinShotoku + sonotaEn;
+}
+function colByHonnin(honninShotoku){
+  if(honninShotoku<=9000000) return 'c900';
+  if(honninShotoku<=9500000) return 'c950';
+  if(honninShotoku<=10000000) return 'c1000';
+  return null;
+}
+// 配偶者控除・配偶者特別控除。haiShotoku=配偶者の合計所得
+function calcHaigusha(hai, honninShotoku, juminzei){
+  if(!hai) return { 額:0, 区分:null };
+  const col = colByHonnin(honninShotoku);
+  if(!col) return { 額:0, 区分:null };
+  const rojin = hai.age >= 70;
+  if(hai.shotoku <= PARAMS.配偶者控除.所得要件){
+    const t = juminzei
+      ? (rojin ? PARAMS.住民税.老人配偶者控除 : PARAMS.住民税.配偶者控除)
+      : (rojin ? PARAMS.配偶者控除.老人 : PARAMS.配偶者控除.一般);
+    return { 額: t[col], 区分: rojin ? '老人' : '一般' };
+  }
+  const row = PARAMS.配偶者控除.特別控除表.find(r => hai.shotoku>=r.下限 && hai.shotoku<=r.上限);
+  if(!row) return { 額:0, 区分:null };
+  // 住民税の配偶者特別控除は所得税の額と同じ。ただし住民税の配偶者控除額が上限
+  const v = juminzei ? Math.min(row[col], PARAMS.住民税.配偶者控除[col]) : row[col];
+  return { 額: v, 区分: '特別' };
+}
+function calcFuyou(deps, juminzei){
+  const t = juminzei ? PARAMS.住民税.扶養控除 : PARAMS.扶養控除;
+  return deps.reduce((s,d)=>{
+    if(d.kubun==='kodomo'){
+      if(d.age<=15) return s;
+      if(d.age<=18) return s+t.c16_18;
+      if(d.age<=22) return s+t.c19_22;
+      return s+t.c23plus;
+    }
+    if(d.age<70) return s+t.c23plus;
+    return s + (d.doukyo ? t.oya70doukyo : t.oya70betsu);
+  }, 0);
+}
+function calcSeimei(premiums, juminzei){
+  const p = juminzei ? PARAMS.生命保険料控除.住民税 : PARAMS.生命保険料控除.所得税;
+  const each = premiums.map(en => en<=0 ? 0 : Math.ceil(tableLookup(p.表, en).f(en)));
+  return Math.min(p.合計上限, each.reduce((a,b)=>a+b,0));
+}
+function calcShotokuzei(kazei){
+  const row = tableLookup(PARAMS.所得税速算表, kazei);
+  return Math.max(0, Math.round(kazei*row.税率 - row.控除));
+}
+// 住民税の調整控除（人的控除差調整額）
+function calcChoseiKoujo(kazeiJ, goukei, hai, haiRes, deps){
+  if(goukei > 25000000) return 0;
+  const d = PARAMS.住民税.調整控除_人的控除差;
+  let sa = d.基礎;
+  if(haiRes.区分==='一般') sa += d.配偶者;
+  if(haiRes.区分==='老人') sa += d.老人配偶者;
+  for(const x of deps){
+    if(x.kubun==='kodomo'){
+      if(x.age<=15) continue;
+      sa += (x.age>=19 && x.age<=22) ? d.特定扶養 : d.扶養一般;
+    } else {
+      if(x.age<70) sa += d.扶養一般;
+      else sa += x.doukyo ? d.同居老親 : d.老人扶養;
+    }
+  }
+  const base = kazeiJ <= 2000000 ? Math.min(sa, kazeiJ) : Math.max(sa - (kazeiJ - 2000000), 50000);
+  return Math.round(base * 0.05);
+}
+// 低所得者の均等割（平等割）軽減割合。本人のみ世帯として判定
+function keigenWari(hanteiShotoku){
+  const k = PARAMS.軽減判定;
+  if(hanteiShotoku <= k.基礎) return 7;
+  if(hanteiShotoku <= k.基礎 + k.五割加算*1) return 5;
+  if(hanteiShotoku <= k.基礎 + k.二割加算*1) return 2;
+  return 0;
+}
+function calcKokuho(goukei, hanteiShotoku, age){
+  const p = PARAMS.国保_芦屋市;
+  const santei = Math.max(0, goukei - 430000);
+  const w = keigenWari(hanteiShotoku);
+  const keep = 1 - w/10;
+  const part = (q)=> Math.min(santei*q.率 + (q.均等 + q.平等)*keep, q.上限);
+  const out = { '国保 医療分': part(p.医療), '国保 支援金分': part(p.支援), '国保 子ども分': part(p.子ども) };
+  if(age>=40 && age<65) out['国保 介護分'] = part(p.介護);
+  return { 内訳: out, 軽減: w };
+}
+function calcKouki(goukei, hanteiShotoku){
+  const p = PARAMS.後期_兵庫;
+  const santei = Math.max(0, goukei - 430000);
+  const w = keigenWari(hanteiShotoku);
+  const part = (q)=>{
+    const rate = w===7 ? q.七割軽減率 : w/10;
+    return Math.min(santei*q.率 + q.均等*(1-rate), q.上限);
+  };
+  return { 内訳: { '後期高齢者医療 医療分': part(p.医療), '後期高齢者医療 子ども分': part(p.子ども) }, 軽減: w };
+}
+// 65歳以上の介護保険料（芦屋市の所得段階）
+function calcKaigo1go({ honninKazei, setaiKazei, goukei, nenkinShunyu, nenkinShotoku, kyuyoShotoku }){
+  const p = PARAMS.介護1号_芦屋市;
+  let dan;
+  if(honninKazei){
+    dan = 6 + p.課税者境界.filter(b => goukei >= b).length;
+  } else {
+    const sonotaGoukei = Math.max(0, goukei - nenkinShotoku - Math.min(kyuyoShotoku, 100000));
+    const v = nenkinShunyu + sonotaGoukei;
+    if(setaiKazei) dan = v <= p.低所得基準1 ? 4 : 5;
+    else dan = v <= p.低所得基準1 ? 1 : (v <= p.低所得基準2 ? 2 : 3);
+  }
+  return { 額: p.段階年額[dan-1], 段階: dan };
+}
+
+function calcAll(input){
+  const { kyuyo, jigyo, zassho, nenkin, age, shahokenType, kenpoRitsu, sonota, haigusha, dependents, koujo } = input;
+  const S = PARAMS.社保;
+  const notes = [];
+
+  // --- 所得 ---
+  const kyuyoEn = kyuyo.has ? manToEn(kyuyo.nenshuMan) : 0;
+  let kyuyoShotoku = kyuyo.has ? Math.max(0, kyuyoEn - calcKyuyoKoujo(kyuyoEn)) : 0;
+  // 所得金額調整控除①（給与850万円超＋23歳未満の扶養親族）
+  const C = PARAMS.所得金額調整控除;
+  if(kyuyoEn > C.給与下限 && dependents.some(d=>d.age<23)){
+    kyuyoShotoku = Math.max(0, kyuyoShotoku - Math.round((Math.min(kyuyoEn, C.給与上限) - C.給与下限) * C.率));
+  }
+  const jigyoEn = jigyo.has ? manToEn(jigyo.shotokuMan) : 0;
+  const zasshoEn = zassho.has ? manToEn(zassho.shotokuMan) : 0;
+  const nenkinEn = nenkin.has ? manToEn(nenkin.nenkinMan) : 0;
+  const otherShotoku = kyuyoShotoku + jigyoEn + zasshoEn;
+  const nenkinShotoku = nenkin.has ? Math.max(0, nenkinEn - calcNenkinKoujo(nenkinEn, age, otherShotoku)) : 0;
+  // 所得金額調整控除②（給与所得と年金所得の両方がある場合）
+  if(kyuyoShotoku>0 && nenkinShotoku>0){
+    const adj = Math.max(0, Math.min(kyuyoShotoku, C.併用上限) + Math.min(nenkinShotoku, C.併用上限) - C.併用上限);
+    kyuyoShotoku -= adj;
+  }
+  const goukei = kyuyoShotoku + jigyoEn + zasshoEn + nenkinShotoku;
+
+  // 配偶者
+  const hai = haigusha ? { age: haigusha.age, shotoku: calcGoukeiShotoku({ kyuyoEn: manToEn(haigusha.nenshuMan), nenkinEn: manToEn(haigusha.nenkinMan), sonotaEn: manToEn(haigusha.sonotaMan), age: haigusha.age }) } : null;
+  const doitsuSeikei = hai && hai.shotoku <= PARAMS.配偶者控除.所得要件;
+
+  // --- 住民税の非課税判定（所得のみで決まる） ---
+  const NK = PARAMS.住民税.非課税;
+  const ninzu = 1 + (doitsuSeikei?1:0) + dependents.length;
+  const fuyouAri = ninzu > 1;
+  const kintouHikazei = goukei <= NK.一人当たり*ninzu + NK.加算 + (fuyouAri ? NK.均等割_扶養あり加算 : 0);
+  const shotokuwariHikazei = goukei <= NK.一人当たり*ninzu + NK.加算 + (fuyouAri ? NK.所得割_扶養あり加算 : 0);
+
+  // --- 社会保険料 ---
+  const shaho = {};
+  const isKouki = age >= 75;
+  const is2go = age >= 40 && age < 65;
+  const hanteiShotoku = Math.max(0, goukei - (age>=65 ? Math.min(nenkinShotoku, PARAMS.軽減判定.年金特別控除65) : 0));
+  let keigen = 0;
+
+  if(shahokenType==='shakaihoken'){
+    if(kyuyo.has){
+      const shoyo = Math.min(manToEn(kyuyo.shoyoMan), kyuyoEn);
+      const getsu = (kyuyoEn - shoyo) / 12;
+      const kenpoBase = Math.min(getsu, S.健保月額上限)*12 + Math.min(shoyo, S.健保賞与年上限);
+      const kounenBase = Math.min(getsu, S.厚年月額上限)*12 + Math.min(shoyo, S.厚年賞与1回上限*S.賞与回数想定);
+      if(!isKouki){
+        shaho['健康保険'] = kenpoBase * kenpoRitsu / 2;
+        shaho['子ども・子育て支援金'] = kenpoBase * S.子ども支援金率 / 2;
+        if(is2go) shaho['介護保険（第2号）'] = kenpoBase * S.介護率 / 2;
+      }
+      if(age < 70) shaho['厚生年金'] = kounenBase * S.厚年率 / 2;
+      else notes.push('70歳以上のため厚生年金保険料はかかりません。');
+      shaho['雇用保険'] = kyuyoEn * S.雇用率_本人;
+    } else {
+      notes.push('「社保」を選んでいますが給与所得がないため、会社の社会保険料は0円になっています。退職後なら「国保」か「その他（任意継続等）」を選んでください。');
+    }
+  } else if(shahokenType==='kokuho' && !isKouki){
+    const k = calcKokuho(goukei, hanteiShotoku, age);
+    Object.assign(shaho, k.内訳); keigen = k.軽減;
+  } else if(shahokenType==='sonota' && !isKouki){
+    const g = manToEn(sonota.getsugakuMan);
+    shaho['健康保険'] = g * (sonota.ritsu/100) * 12;
+    shaho['子ども・子育て支援金'] = g * S.子ども支援金率 * 12;
+    if(is2go) shaho['介護保険（第2号）'] = g * S.介護率 * 12;
+  }
+  if(isKouki){
+    const k = calcKouki(goukei, hanteiShotoku);
+    Object.assign(shaho, k.内訳); keigen = k.軽減;
+    notes.push('75歳以上のため、健康保険は後期高齢者医療制度（兵庫県）で計算しています。');
+  }
+  if(shahokenType!=='shakaihoken' && age>=20 && age<60) shaho['国民年金'] = PARAMS.国民年金_年額;
+  if(age>=65){
+    const setaiKazei = !!hai && hai.shotoku > NK.一人当たり + NK.加算; // 配偶者が単身基準で課税か（概算）
+    const k1 = calcKaigo1go({ honninKazei: !kintouHikazei, setaiKazei, goukei, nenkinShunyu: nenkinEn, nenkinShotoku, kyuyoShotoku });
+    shaho[`介護保険（65歳以上・第${k1.段階}段階）`] = k1.額;
+  }
+  if(keigen) notes.push(`所得が低いため、保険料の均等割に${keigen}割軽減を適用しています（世帯に他の加入者・所得がある場合は変わります）。`);
+  for(const k of Object.keys(shaho)) shaho[k] = Math.round(shaho[k]);
+  const shakaiHoken = Object.values(shaho).reduce((a,b)=>a+b,0);
+
+  // --- 所得控除 ---
+  const idecoEn = manToEn(koujo.idecoMan);
+  const premiums = [koujo.seimeiIppanMan, koujo.seimeiKaigoMan, koujo.seimeiNenkinMan].map(manToEn);
+  const jishinEn = manToEn(koujo.jishinMan);
+  const sonotaEn = manToEn(koujo.sonotaMan);
+
+  const kisoT = tableLookup(PARAMS.基礎控除, goukei).額;
+  const haiT = calcHaigusha(hai, goukei, false);
+  const fuyoT = calcFuyou(dependents, false);
+  const seimeiT = calcSeimei(premiums, false);
+  const jishinT = Math.min(jishinEn, PARAMS.地震保険料控除.所得税上限);
+  const koujoT = kisoT + shakaiHoken + haiT.額 + fuyoT + idecoEn + seimeiT + jishinT + sonotaEn;
+  const kazeiT = Math.max(0, chopSen(goukei - koujoT));
+  const honzei = calcShotokuzei(kazeiT);
+  const loanEn = manToEn(koujo.jutakuLoanMan);
+  const loanT = Math.min(honzei, loanEn);
+  const kijunZei = honzei - loanT;
+  const shotokuzei = Math.floor((kijunZei + kijunZei*PARAMS.復興税率)/100)*100;
+
+  const kisoJ = tableLookup(PARAMS.住民税.基礎控除, goukei).額;
+  const haiJ = calcHaigusha(hai, goukei, true);
+  const fuyoJ = calcFuyou(dependents, true);
+  const seimeiJ = calcSeimei(premiums, true);
+  const jishinJ = Math.min(Math.round(jishinEn * PARAMS.地震保険料控除.住民税率), PARAMS.地震保険料控除.住民税上限);
+  const koujoJ = kisoJ + shakaiHoken + haiJ.額 + fuyoJ + idecoEn + seimeiJ + jishinJ + sonotaEn;
+  const kazeiJ = Math.max(0, chopSen(goukei - koujoJ));
+  let shotokuwari = 0, loanJ = 0, chosei = 0;
+  if(!shotokuwariHikazei){
+    shotokuwari = Math.round(kazeiJ * PARAMS.住民税.税率);
+    chosei = Math.min(shotokuwari, calcChoseiKoujo(kazeiJ, goukei, hai, haiJ, dependents));
+    shotokuwari -= chosei;
+    const L = PARAMS.住宅ローン控除_住民税;
+    loanJ = Math.min(shotokuwari, Math.max(0, loanEn - loanT), Math.min(Math.floor(kazeiT*L.率), L.上限));
+    shotokuwari -= loanJ;
+  }
+  const kintou = kintouHikazei ? 0 : PARAMS.住民税.均等割;
+  const juminzei = Math.floor(shotokuwari/100)*100 + kintou;
+  if(kintouHikazei) notes.push('所得が住民税の非課税基準以下のため、住民税は0円です。');
+  else if(shotokuwariHikazei) notes.push('住民税は所得割が非課税で、均等割のみです。');
+
+  // --- 個人事業税 ---
+  const jigyozei = (jigyo.has && jigyo.zeiritsu>0)
+    ? Math.floor(Math.max(0, jigyoEn - PARAMS.個人事業税.事業主控除) * jigyo.zeiritsu / 100)*100 : 0;
+
+  const gakumen = kyuyoEn + jigyoEn + zasshoEn + nenkinEn;
+  const tedori = gakumen - shakaiHoken - shotokuzei - juminzei - jigyozei;
+
+  const warns = [];
+  // 扶養の判定は本人が被用者保険（社保・任意継続等）の場合のみ意味がある
+  if(haigusha && haigusha.age < 75 && !isKouki && shahokenType !== 'kokuho'){
+    const shunyu = manToEn(haigusha.nenshuMan) + manToEn(haigusha.nenkinMan) + manToEn(haigusha.sonotaMan);
+    const kabe = haigusha.age >= 60 ? 1800000 : 1300000;
+    if(shunyu >= kabe){
+      warns.push(`配偶者の年間収入（給与・年金等の合計）が${kabe/10000}万円以上です。社会保険の扶養（${haigusha.age>=60?'60歳以上は180万円':'130万円'}の壁）からは外れる可能性があります。税の配偶者控除・配偶者特別控除とは別の基準です。`);
+    } else if(manToEn(haigusha.nenshuMan) > 0){
+      warns.push('配偶者が給与を得ている場合、勤務先の規模・労働時間によっては扶養の基準より低い年収でも勤務先の社会保険に加入することがあります。必要に応じて勤務先にご確認ください。');
+    }
+  }
+
+  const shahoMan = {};
+  for(const [k,v] of Object.entries(shaho)) shahoMan[k] = enToMan(v);
+
+  return {
+    額面合計: enToMan(gakumen),
+    給与所得: enToMan(kyuyoShotoku), 事業所得: enToMan(jigyoEn), 雑所得業務: enToMan(zasshoEn), 雑所得年金: enToMan(nenkinShotoku),
+    合計所得: enToMan(goukei),
+    社保内訳: shahoMan, 社保合計: enToMan(shakaiHoken),
+    所得税: enToMan(shotokuzei), 住民税: enToMan(juminzei), 事業税: enToMan(jigyozei),
+    課税所得_所得税: enToMan(kazeiT), 課税所得_住民税: enToMan(kazeiJ),
+    住宅ローン控除_所得税: enToMan(loanT), 住宅ローン控除_住民税: enToMan(loanJ),
+    手取り: enToMan(tedori), 手取り月額: enToMan(tedori/12),
+    警告: warns, 注記: notes,
+    _en: { tedori, shotokuzei, juminzei, shakaiHoken, kazeiT, kazeiJ, goukei, shaho, jigyozei, chosei },
+  };
+}
+
+// ===== UI =====
+const $ = id => document.getElementById(id);
+const fmt = v => Number(v).toLocaleString('ja-JP', { maximumFractionDigits: 1 });
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const activeOf = toggle => toggle.querySelector('.active').dataset.v;
+const num = id => Math.max(0, parseFloat($(id).value)||0);
+
+function setupToggle(toggle, onChange){
+  toggle.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    [...toggle.children].forEach(b=>b.classList.toggle('active', b===btn));
+    onChange && onChange(btn.dataset.v);
+  });
+}
+
+document.querySelectorAll('.source-head').forEach(head=>{
+  const cb = head.querySelector('input[type=checkbox]');
+  const body = $(head.dataset.target);
+  const sync = ()=> body.classList.toggle('open', cb.checked);
+  cb.addEventListener('change', sync);
+  head.addEventListener('click', (e)=>{ if(e.target!==cb){ cb.checked=!cb.checked; sync(); cb.dispatchEvent(new Event('change')); } });
+  sync();
+});
+
+const kodomoList = $('kodomoList');
+const oyaList = $('oyaList');
+function addDepRow(container, age, doukyo=true){
+  const el = document.createElement('div');
+  el.className = 'dep-item';
+  el.innerHTML = `
+    <input type="number" class="dep-age" value="${age}" min="0" max="110" aria-label="年齢">
+    <select class="dep-doukyo" aria-label="同居・別居">
+      <option value="yes" ${doukyo?'selected':''}>同居</option>
+      <option value="no" ${!doukyo?'selected':''}>別居</option>
+    </select>
+    <button type="button" class="del" aria-label="削除">×</button>`;
+  el.querySelector('.del').addEventListener('click', ()=> el.remove());
+  container.appendChild(el);
+}
+function readDeps(container, kubun){
+  return [...container.children].map(el=>({
+    kubun, age: parseInt(el.querySelector('.dep-age').value)||0,
+    doukyo: el.querySelector('.dep-doukyo').value==='yes',
+  }));
+}
+
+const kodomoToggle = $('kodomoToggle');
+setupToggle(kodomoToggle, v=>{
+  const on = v==='yes';
+  $('kodomoSection').style.display = on ? 'block' : 'none';
+  if(on && kodomoList.children.length===0) addDepRow(kodomoList, 10);
+  if(!on) kodomoList.innerHTML = '';
+});
+$('addKodomo').addEventListener('click', ()=> addDepRow(kodomoList, 10));
+
+const oyaToggle = $('oyaToggle');
+setupToggle(oyaToggle, v=>{
+  const on = v==='yes';
+  $('oyaSection').style.display = on ? 'block' : 'none';
+  if(on && oyaList.children.length===0) addDepRow(oyaList, 70);
+  if(!on) oyaList.innerHTML = '';
+});
+$('addOya').addEventListener('click', ()=> addDepRow(oyaList, 70));
+
+const haigushaToggle = $('haigushaToggle');
+setupToggle(haigushaToggle, v=>{ $('haigushaRows').style.display = v==='yes' ? 'block' : 'none'; });
+
+const shahokenToggle = $('shahokenToggle');
+function syncShahoRows(v){
+  $('shahoRows').style.display = v==='shakaihoken' ? 'block' : 'none';
+  $('sonotaRows').style.display = v==='sonota' ? 'block' : 'none';
+}
+setupToggle(shahokenToggle, syncShahoRows);
+
+// 給与なし＋他の収入あり → 国保を自動提案
+function autoSuggestShahoken(){
+  const kyuyoOn = $('has-kyuyo').checked;
+  const others = $('has-jigyo').checked || $('has-zassho').checked || $('has-nenkin').checked;
+  if(!kyuyoOn && others && activeOf(shahokenToggle)==='shakaihoken'){
+    [...shahokenToggle.children].forEach(b=>b.classList.toggle('active', b.dataset.v==='kokuho'));
+    syncShahoRows('kokuho');
+  }
+}
+['has-kyuyo','has-jigyo','has-zassho','has-nenkin'].forEach(id=> $(id).addEventListener('change', autoSuggestShahoken));
+
+// ===== 入力の読み取り =====
+function readInputs(){
+  const hasHaigusha = activeOf(haigushaToggle)==='yes';
+  const kodomo = activeOf(kodomoToggle)==='yes' ? readDeps(kodomoList, 'kodomo') : [];
+  const oya = activeOf(oyaToggle)==='yes' ? readDeps(oyaList, 'oya') : [];
+  return {
+    kyuyo: { has: $('has-kyuyo').checked, nenshuMan: num('nenshu'), shoyoMan: num('shoyo') },
+    jigyo: { has: $('has-jigyo').checked, shotokuMan: num('jigyoShotoku'), zeiritsu: parseFloat($('jigyozeiRitsu').value)||0 },
+    zassho: { has: $('has-zassho').checked, shotokuMan: num('zasshoShotoku') },
+    nenkin: { has: $('has-nenkin').checked, nenkinMan: num('nenkinGaku') },
+    age: parseInt($('age').value)||0,
+    shahokenType: activeOf(shahokenToggle),
+    kenpoRitsu: num('kenpoRitsu')/100,
+    sonota: { getsugakuMan: num('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
+    haigusha: hasHaigusha ? { nenshuMan: num('haigushaNenshu'), nenkinMan: num('haigushaNenkin'), sonotaMan: num('haigushaSonota'), age: parseInt($('haigushaAge').value)||0 } : null,
+    koujo: {
+      idecoMan: num('ideco'), seimeiIppanMan: num('seimeiIppan'), seimeiKaigoMan: num('seimeiKaigo'), seimeiNenkinMan: num('seimeiNenkin'),
+      jishinMan: num('jishin'), sonotaMan: num('sonotaKoujo'), jutakuLoanMan: num('jutakuLoan'),
+    },
+    otherIncome: $('otherIncome').checked,
+    kodomo, oya,
+    dependents: [...kodomo, ...oya],
+  };
+}
+
+const SHAHO_TYPE_LABEL = { shakaihoken:'社会保険（勤務先の健康保険・厚生年金）', kokuho:'国民健康保険＋国民年金', sonota:'その他（特例退職・任意継続）' };
+const OTHER_INCOME_WARN = 'この診断には不動産・配当・譲渡などの所得は含まれていません。別途ご確認ください。';
+
+function incomeLines(inp, r){
+  const lines = [];
+  if(inp.kyuyo.has) lines.push(['給与所得', r.給与所得]);
+  if(inp.jigyo.has) lines.push(['事業所得', r.事業所得]);
+  if(inp.zassho.has) lines.push(['雑所得（業務）', r.雑所得業務]);
+  if(inp.nenkin.has) lines.push(['雑所得（公的年金）', r.雑所得年金]);
+  return lines;
+}
+function allWarns(inp, r){
+  const w = [...r.警告];
+  if(inp.otherIncome) w.push(OTHER_INCOME_WARN);
+  return w;
+}
+
+// ===== 画面表示 =====
+function renderScreen(inp, r){
+  const shahoEntries = Object.entries(r.社保内訳);
+  const shahokenRows = shahoEntries.length
+    ? shahoEntries.map(([k,v])=> `<div class="srow"><span>${esc(k)}</span><span class="sval">− ${fmt(v)} 万円</span></div>`).join('')
+    : '<div class="srow"><span>なし</span><span class="sval">0 万円</span></div>';
+  const incomeRows = incomeLines(inp, r).map(([k,v])=>
+    `<div class="brow"><span>${k}</span><span class="bval">${fmt(v)} 万円</span></div>`).join('');
+
+  $('resultBody').innerHTML = `
+    <div class="headline">
+      <div class="label">年間手取り収入（概算）</div>
+      <div class="value">${fmt(r.手取り)}<span>万円</span></div>
+      <div class="monthly">月あたり 約${fmt(r.手取り月額)}万円 ／ 額面合計 ${fmt(r.額面合計)}万円</div>
+    </div>
+    <div class="breakdown">
+      ${incomeRows}
+      <div class="brow clickable" id="shahoRow">
+        <span class="bkey"><span class="chevron">▶</span>社会保険料</span>
+        <span class="bval">− ${fmt(r.社保合計)} 万円</span>
+      </div>
+      <div class="sub-breakdown" id="shahoDetail">${shahokenRows}</div>
+      <div class="brow"><span>所得税（復興特別所得税を含む）</span><span class="bval">− ${fmt(r.所得税)} 万円</span></div>
+      <div class="brow"><span>住民税</span><span class="bval">− ${fmt(r.住民税)} 万円</span></div>
+      ${r.事業税>0 ? `<div class="brow"><span>個人事業税</span><span class="bval">− ${fmt(r.事業税)} 万円</span></div>` : ''}
+    </div>
+    ${allWarns(inp, r).map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join('')}
+    ${r.注記.map(n=>`<div class="info">${esc(n)}</div>`).join('')}
+  `;
+  $('shahoRow').addEventListener('click', ()=>{
+    $('shahoRow').classList.toggle('open');
+    $('shahoDetail').classList.toggle('open');
+  });
+}
+
+// ===== PDF用レポート =====
+const depText = list => list.map(d=> `${d.age}歳（${d.doukyo?'同居':'別居'}）`).join('、');
+const todayLabel = (d=new Date()) => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+
+function buildReport(inp, r){
+  const atena = $('atena').value.trim();
+  const cond = [];
+  cond.push(['年齢', `${inp.age}歳`]);
+  let shahoText = SHAHO_TYPE_LABEL[inp.shahokenType];
+  if(inp.shahokenType==='shakaihoken') shahoText += `／健康保険料率 ${+(inp.kenpoRitsu*100).toFixed(3)}%`;
+  if(inp.shahokenType==='sonota') shahoText += `／標準報酬月額 ${fmt(inp.sonota.getsugakuMan)}万円・料率 ${inp.sonota.ritsu}%`;
+  cond.push(['健康保険の種類', shahoText]);
+    if(inp.haigusha){
+    const h = inp.haigusha, parts = [];
+    if(h.nenshuMan>0) parts.push(`給与 ${fmt(h.nenshuMan)}万円`);
+    if(h.nenkinMan>0) parts.push(`年金 ${fmt(h.nenkinMan)}万円`);
+    if(h.sonotaMan>0) parts.push(`その他所得 ${fmt(h.sonotaMan)}万円`);
+    cond.push(['配偶者', `あり（${h.age}歳・${parts.length ? parts.join('、') : '収入なし'}）`]);
+  } else cond.push(['配偶者', 'なし']);
+  cond.push(['子', inp.kodomo.length ? depText(inp.kodomo) : 'なし']);
+  cond.push(['その他の扶養家族', inp.oya.length ? depText(inp.oya) : 'なし']);
+  if(inp.kyuyo.has) cond.push(['給与（額面年収）', `${fmt(inp.kyuyo.nenshuMan)}万円${inp.kyuyo.shoyoMan>0 ? `（うち賞与 ${fmt(inp.kyuyo.shoyoMan)}万円）` : ''}`]);
+  if(inp.jigyo.has) cond.push(['事業所得（所得金額）', `${fmt(inp.jigyo.shotokuMan)}万円${inp.jigyo.zeiritsu>0 ? `／個人事業税 ${inp.jigyo.zeiritsu*100}%` : ''}`]);
+  if(inp.zassho.has) cond.push(['雑所得・業務（所得金額）', `${fmt(inp.zassho.shotokuMan)}万円`]);
+  if(inp.nenkin.has) cond.push(['公的年金（年額）', `${fmt(inp.nenkin.nenkinMan)}万円`]);
+  const k = inp.koujo;
+  if(k.idecoMan>0) cond.push(['iDeCo・小規模企業共済', `${fmt(k.idecoMan)}万円`]);
+  const seimei = [['一般',k.seimeiIppanMan],['介護医療',k.seimeiKaigoMan],['個人年金',k.seimeiNenkinMan]].filter(([,v])=>v>0);
+  if(seimei.length) cond.push(['生命保険料（年間）', seimei.map(([n,v])=>`${n} ${fmt(v)}万円`).join('、')]);
+  if(k.jishinMan>0) cond.push(['地震保険料（年間）', `${fmt(k.jishinMan)}万円`]);
+  if(k.sonotaMan>0) cond.push(['その他の所得控除', `${fmt(k.sonotaMan)}万円`]);
+  if(k.jutakuLoanMan>0) cond.push(['住宅ローン控除額', `${fmt(k.jutakuLoanMan)}万円`]);
+  const condRows = cond.map(([a,b])=> `<tr><td class="k">${a}</td><td>${esc(b)}</td></tr>`).join('');
+
+  const incomeRows = incomeLines(inp, r).map(([a,v])=>
+    `<tr class="sub"><td>${a}</td><td class="n">${fmt(v)} 万円</td></tr>`).join('');
+  const shahoSub = Object.entries(r.社保内訳).map(([a,v])=>
+    `<tr class="sub"><td>${esc(a)}</td><td class="n">− ${fmt(v)} 万円</td></tr>`).join('');
+
+  const ref = [
+    ['合計所得金額', `${fmt(r.合計所得)} 万円`],
+    ['課税所得（所得税）', `${fmt(r.課税所得_所得税)} 万円`],
+    ['課税所得（住民税）', `${fmt(r.課税所得_住民税)} 万円`],
+  ];
+  if(r.住宅ローン控除_所得税>0 || r.住宅ローン控除_住民税>0){
+    ref.push(['住宅ローン控除（所得税／住民税）', `${fmt(r.住宅ローン控除_所得税)} ／ ${fmt(r.住宅ローン控除_住民税)} 万円`]);
+  }
+
+  $('report').innerHTML = `
+    <div class="rp-top">
+      <div>
+        <div class="rp-eyebrow">DIAGNOSIS SHEET</div>
+        <div class="rp-title">手取り診断 結果</div>
+      </div>
+      <div class="rp-meta">
+        ${atena ? `<div class="rp-name">${esc(atena)} 様</div>` : ''}
+        作成日：${todayLabel()}
+      </div>
+    </div>
+
+    <div class="rp-headline">
+      <div>
+        <div class="l">年間手取り収入（概算）</div>
+        <div class="v">${fmt(r.手取り)}<span>万円</span></div>
+      </div>
+      <div class="m">月あたり 約${fmt(r.手取り月額)}万円<br>額面合計 ${fmt(r.額面合計)}万円</div>
+    </div>
+
+    <div class="avoid">
+      <h3>入力条件</h3>
+      <table>${condRows}</table>
+    </div>
+
+    <div class="avoid">
+      <h3>計算内訳</h3>
+      <table>
+        <tr><td class="k">額面合計</td><td class="n">${fmt(r.額面合計)} 万円</td></tr>
+        ${incomeRows}
+        <tr><td class="k">社会保険料</td><td class="n">− ${fmt(r.社保合計)} 万円</td></tr>
+        ${shahoSub}
+        <tr><td class="k">所得税（復興特別所得税を含む）</td><td class="n">− ${fmt(r.所得税)} 万円</td></tr>
+        <tr><td class="k">住民税</td><td class="n">− ${fmt(r.住民税)} 万円</td></tr>
+        ${r.事業税>0 ? `<tr><td class="k">個人事業税</td><td class="n">− ${fmt(r.事業税)} 万円</td></tr>` : ''}
+        <tr class="total"><td>年間手取り収入（概算）</td><td class="n">${fmt(r.手取り)} 万円</td></tr>
+      </table>
+      <div style="font-size:9px;color:#8B8F86;margin-top:3px;">※所得の行は控除前の「所得金額」（参考表示）。手取りは額面合計から社会保険料・税を差し引いて算出しています。</div>
+    </div>
+
+    <div class="avoid">
+      <h3>参考</h3>
+      <table>${ref.map(([a,b])=>`<tr><td class="k">${a}</td><td class="n">${b}</td></tr>`).join('')}</table>
+    </div>
+
+    ${allWarns(inp, r).map(w=>`<div class="rp-warn avoid">⚠ ${esc(w)}</div>`).join('')}
+    ${r.注記.map(n=>`<div class="rp-info avoid">${esc(n)}</div>`).join('')}
+
+    <div class="rp-note avoid">${esc($('disclaimerText').textContent.trim())}</div>
+    <div class="rp-foot">
+      <span>${esc(OFFICE_NAME)}</span>
+      <span>手取り診断</span>
+    </div>
+  `;
+}
+
+// ===== 診断実行（画面とレポートは同じ計算結果から作る） =====
+function runDiagnosis(){
+  const inp = readInputs();
+  if(!inp.kyuyo.has && !inp.jigyo.has && !inp.zassho.has && !inp.nenkin.has){
+    $('resultBody').innerHTML = '<p class="placeholder">収入源を1つ以上選択してください</p>';
+    $('pdfBtn').disabled = true; $('printBtn').disabled = true;
+    return null;
+  }
+  const r = calcAll(inp);
+  renderScreen(inp, r);
+  buildReport(inp, r);
+  $('pdfBtn').disabled = false; $('printBtn').disabled = false;
+  return { inp, r };
+}
+
+$('calcBtn').addEventListener('click', ()=>{
+  if(!runDiagnosis()) return;
+  const stamp = $('stamp');
+  stamp.classList.remove('show');
+  void stamp.offsetWidth;
+  stamp.classList.add('show');
+  if(window.innerWidth <= 900) $('resultBody').scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
+$('atena').addEventListener('input', ()=>{ if(!$('pdfBtn').disabled) runDiagnosis(); });
+
+function pdfFileName(){
+  const d = new Date();
+  const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const atena = $('atena').value.trim().replace(/[\\/:*?"<>|\s]/g,'');
+  return `手取り診断_${atena ? atena+'様_' : ''}${ymd}.pdf`;
+}
+
+// PDFダウンロード（html2pdf.js：画像化してA4に配置。日本語フォント問題が起きない方式）
+$('pdfBtn').addEventListener('click', async ()=>{
+  if(!runDiagnosis()) return;
+  const btn = $('pdfBtn'), status = $('pdfStatus');
+  if(typeof html2pdf === 'undefined'){
+    status.textContent = 'PDF作成ライブラリを読み込めませんでした。通信状況を確認するか、右の「印刷・PDF」をお使いください。';
+    return;
+  }
+  btn.disabled = true; status.textContent = 'PDFを作成しています…';
+  try{
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    await html2pdf().set({
+      margin: [12, 12, 12, 12],
+      filename: pdfFileName(),
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: '.avoid' },
+    }).from($('report')).save();
+    status.textContent = 'PDFを保存しました。';
+  }catch(err){
+    console.error(err);
+    status.textContent = 'PDFの作成に失敗しました。右の「印刷・PDF」をお使いください。';
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+// ブラウザの印刷機能（文字が選択できるPDF。スマホは共有→プリント→PDF）
+$('printBtn').addEventListener('click', ()=>{
+  if(!runDiagnosis()) return;
+  const prevTitle = document.title;
+  document.title = pdfFileName().replace(/\.pdf$/,'');
+  window.addEventListener('afterprint', ()=>{ document.title = prevTitle; }, { once:true });
+  window.print();
+});
+</script>
+</body>
+</html>
