@@ -540,7 +540,7 @@ const PARAMS = {
     扶養控除: { c16_18:330000, c19_22:450000, c23plus:330000, oya70doukyo:450000, oya70betsu:380000 },
     配偶者控除: { c900: 330000, c950: 220000, c1000: 110000 },
     老人配偶者控除: { c900: 380000, c950: 260000, c1000: 130000 },
-    調整控除_人的控除差: { 基礎:50000, 配偶者:50000, 老人配偶者:100000, 扶養一般:50000, 特定扶養:180000, 老人扶養:100000, 同居老親:130000 },
+    調整控除_人的控除差: { 基礎:50000, 配偶者:{c900:50000,c950:40000,c1000:20000}, 老人配偶者:{c900:100000,c950:60000,c1000:30000}, 扶養一般:50000, 特定扶養:180000, 老人扶養:100000, 同居老親:130000 },
     非課税: { 一人当たり:350000, 加算:100000, 均等割_扶養あり加算:210000, 所得割_扶養あり加算:320000 },
   },
   社保: {
@@ -681,8 +681,9 @@ function calcChoseiKoujo(kazeiJ, goukei, hai, haiRes, deps){
   if(goukei > 25000000) return 0;
   const d = PARAMS.住民税.調整控除_人的控除差;
   let sa = d.基礎;
-  if(haiRes.区分==='一般') sa += d.配偶者;
-  if(haiRes.区分==='老人') sa += d.老人配偶者;
+  const col = colByHonnin(goukei);
+  if(haiRes.区分==='一般' && col) sa += d.配偶者[col];
+  if(haiRes.区分==='老人' && col) sa += d.老人配偶者[col];
   for(const x of deps){
     if(x.kubun==='kodomo'){
       if(x.age<=15) continue;
@@ -924,7 +925,7 @@ function calcAll(input){
 
   return {
     額面合計: enToMan(gakumen),
-    非課税年金: enToMan(hikazeiNenkinEn), 年金停止: enToMan(teishiEn), 給与所得: enToMan(kyuyoShotoku), 事業所得: enToMan(jigyoEn), 雑所得業務: enToMan(zasshoEn), 雑所得年金: enToMan(nenkinShotoku),
+    非課税年金: enToMan(hikazeiNenkinEn), 年金停止: enToMan(teishiEn), 給与収入: enToMan(kyuyoEn), 年金収入: enToMan(nenkinEn), 事業額面: enToMan(jigyoEn + aoiroEn), 給与所得: enToMan(kyuyoShotoku), 事業所得: enToMan(jigyoEn), 雑所得業務: enToMan(zasshoEn), 雑所得年金: enToMan(nenkinShotoku),
     合計所得: enToMan(goukei),
     社保内訳: shahoMan, 社保合計: enToMan(shakaiHoken),
     所得税: enToMan(shotokuzei), 住民税: enToMan(juminzei), 事業税: enToMan(jigyozei),
@@ -1106,11 +1107,11 @@ const OTHER_INCOME_WARN = 'この診断には不動産・配当・譲渡など�
 
 function incomeLines(inp, r){
   const lines = [];
-  if(inp.kyuyo.has) lines.push(['給与所得', r.給与所得]);
-  if(inp.jigyo.has) lines.push(['事業所得', r.事業所得]);
+  // 額面（実際に入ってくるお金）。合計すると「額面合計」になる
+  if(inp.kyuyo.has) lines.push(['給与（額面年収）', r.給与収入]);
+  if(inp.jigyo.has) lines.push([r.事業額面 !== r.事業所得 ? '事業（売上 − 経費）' : '事業所得', r.事業額面]);
   if(inp.zassho.has) lines.push(['雑所得（業務）', r.雑所得業務]);
-  if(inp.nenkin.has) lines.push(['雑所得（公的年金）', r.雑所得年金]);
-  if(inp.nenkin.has && r.年金停止>0) lines.push(['（参考）在職老齢年金の支給停止額　※上の年金に反映済み', `− ${fmt(r.年金停止)}`]);
+  if(inp.nenkin.has) lines.push([r.年金停止>0 ? `公的年金（受取額。在職老齢年金の停止 ${fmt(r.年金停止)}万円を引いた後）` : '公的年金（受取額）', r.年金収入]);
   if(inp.nenkin.has && r.非課税年金>0) lines.push(['非課税の年金（遺族・障害）', r.非課税年金]);
   return lines;
 }
@@ -1185,6 +1186,7 @@ function renderScreen(inp, r){
     </div>
     <div class="breakdown">
       ${incomeRows}
+      ${incomeLines(inp, r).length > 1 ? `<div class="brow" style="font-weight:700;border-bottom:1px solid var(--line);"><span>額面合計</span><span class="bval">${fmt(r.額面合計)} 万円</span></div>` : ''}
       <div class="brow clickable" id="shahoRow">
         <span class="bkey"><span class="chevron">▶</span>社会保険料</span>
         <span class="bval">− ${fmt(r.社保合計)} 万円</span>
@@ -1297,7 +1299,7 @@ function buildReport(inp, r){
         ${r.事業税>0 ? `<tr><td class="k">個人事業税</td><td class="n">− ${fmt(r.事業税)} 万円</td></tr>` : ''}
         <tr class="total"><td>年間手取り収入（概算）</td><td class="n">${fmt(r.手取り)} 万円</td></tr>
       </table>
-      <div style="font-size:9px;color:#8B8F86;margin-top:3px;">※所得の行は控除前の「所得金額」（参考表示）。手取りは額面合計から社会保険料・税を差し引いて算出しています。</div>
+      <div style="font-size:9px;color:#8B8F86;margin-top:3px;">※給与・年金は収入（額面）、事業・雑は所得金額の合計を額面合計とし、社会保険料・税を差し引いて手取りを算出しています。給与所得控除・公的年金等控除は税金の計算にだけ使い、手取りからは引いていません。</div>
     </div>
 
     <div class="avoid">
