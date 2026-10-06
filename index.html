@@ -150,7 +150,7 @@
         <p class="panel-title">基本情報</p>
         <div class="row">
           <label for="age">年齢<span class="hint">その年の12月31日時点の年齢</span></label>
-          <div class="field"><input type="number" id="age" value="40" min="15" max="110"><span class="unit">歳</span></div>
+          <div class="field"><select id="age" class="age-select" data-min="15" data-max="100" data-default="40"></select><span class="unit">歳</span></div>
         </div>
         <div class="row">
           <label>健康保険の種類<span class="hint">75歳以上は自動的に後期高齢者医療で計算します</span></label>
@@ -190,7 +190,7 @@
         <div id="haigushaRows" style="display:none;">
           <div class="row">
             <label for="haigushaAge">配偶者の年齢<span class="hint">年金の控除額（65歳）・老人配偶者控除（70歳）の判定に使います</span></label>
-            <div class="field"><input type="number" id="haigushaAge" value="40" min="15" max="110"><span class="unit">歳</span></div>
+            <div class="field"><select id="haigushaAge" class="age-select" data-min="15" data-max="100" data-default="40"></select><span class="unit">歳</span></div>
           </div>
           <div class="row">
             <label for="haigushaNenshu">配偶者の給与収入<span class="hint">額面。なければ0</span></label>
@@ -852,13 +852,33 @@ document.querySelectorAll('.source-head').forEach(head=>{
   sync();
 });
 
+// 年齢はプルダウンで選ぶ（入力し直し不要）
+function ageOptions(min, max, sel){
+  let h = '';
+  for(let a=min; a<=max; a++) h += `<option value="${a}"${a==sel?' selected':''}>${a}</option>`;
+  return h;
+}
+document.querySelectorAll('select.age-select').forEach(el=>{
+  el.innerHTML = ageOptions(+el.dataset.min, +el.dataset.max, +el.dataset.default);
+});
+// 金額などの数値欄は、タップ・クリック時に中身を全選択（そのまま上書き入力できる）
+document.addEventListener('focusin', e=>{
+  const el = e.target;
+  if(el.matches && el.matches('input[type=number]')){ el.dataset.justFocused = '1'; try{ el.select(); }catch(_){} }
+});
+// クリックで入った場合、mouseupでカーソル位置に戻されるのを防いで全選択を保つ
+document.addEventListener('mouseup', e=>{
+  const el = e.target;
+  if(el.matches && el.matches('input[type=number]') && el.dataset.justFocused){ e.preventDefault(); delete el.dataset.justFocused; }
+});
+document.addEventListener('focusout', e=>{ if(e.target.dataset) delete e.target.dataset.justFocused; });
 const kodomoList = $('kodomoList');
 const oyaList = $('oyaList');
 function addDepRow(container, age, doukyo=true){
   const el = document.createElement('div');
   el.className = 'dep-item';
   el.innerHTML = `
-    <input type="number" class="dep-age" value="${age}" min="0" max="110" aria-label="年齢">
+    <select class="dep-age" aria-label="年齢">${ageOptions(0, 100, age)}</select>
     <select class="dep-doukyo" aria-label="同居・別居">
       <option value="yes" ${doukyo?'selected':''}>同居</option>
       <option value="no" ${!doukyo?'selected':''}>別居</option>
