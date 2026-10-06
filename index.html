@@ -139,9 +139,11 @@
   .step:last-child{border-bottom:none;}
   .sno{flex:0 0 22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
   .sbody{min-width:0;}
-  .stitle{font-size:13px;font-weight:700;color:var(--ink);}
-  .sformula{font-family:'JetBrains Mono','Noto Sans JP',monospace;font-size:12.5px;color:var(--ink);margin-top:3px;line-height:1.7;word-break:break-word;}
-  .sformula b{color:var(--good);}
+  .stitle{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:.02em;}
+  .sformula{font-family:'JetBrains Mono','Noto Sans JP',monospace;font-size:12.5px;color:var(--ink);margin-top:6px;line-height:1.6;word-break:break-word;}
+  .sformula .fl{display:flex;align-items:baseline;gap:8px;padding:3px 0;}
+  .sformula .lbl{flex:0 0 auto;min-width:5.5em;font-family:'Noto Sans JP',sans-serif;font-size:12.5px;font-weight:700;color:var(--ink);background:#EEF0EA;border-radius:3px;padding:1px 7px;text-align:center;}
+  .sformula b{color:var(--good);font-size:14px;}
   .snote{font-size:11.5px;color:#8B8F86;margin-top:4px;line-height:1.6;}
   @media print{
     @page{size:A4 portrait;margin:12mm;}
@@ -1022,42 +1024,49 @@ function allWarns(inp, r){
 // ===== 画面表示 =====
 function stepsHTML(inp, r){
   const t = r._steps, y = v => Math.round(v).toLocaleString('ja-JP');
-  const st = (no, title, formula, note='') => `
+  const L = (label, body) => `<div class="fl"><span class="lbl">${label}</span>${body}</div>`;
+  const st = (no, title, lines, note='') => `
     <div class="step"><div class="sno">${no}</div><div class="sbody">
-      <div class="stitle">${title}</div><div class="sformula">${formula}</div>${note ? `<div class="snote">${note}</div>` : ''}
+      <div class="stitle">${title}</div><div class="sformula">${lines.join('')}</div>${note ? `<div class="snote">${note}</div>` : ''}
     </div></div>`;
   const list = obj => Object.entries(obj).filter(([,v])=>v>0).map(([k,v])=>`${k} ${y(v)}`).join('／');
   let no = 0, h = '';
   // 1 所得
   const inc = [];
-  if(t.kyuyoEn) inc.push(`給与：収入 ${y(t.kyuyoEn)} − 給与所得控除 ${y(t.kyuyoKoujoEn)} ＝ ${y(t.kyuyoEn - t.kyuyoKoujoEn)}`);
-  if(t.nenkinEn) inc.push(`年金：収入 ${y(t.nenkinEn)} − 公的年金等控除 ${y(t.nenkinKoujoEn)} ＝ ${y(Math.max(0, t.nenkinEn - t.nenkinKoujoEn))}`);
-  if(t.jigyoEn) inc.push(`事業：所得 ${y(t.jigyoEn)}`);
-  if(t.zasshoEn) inc.push(`雑（業務）：所得 ${y(t.zasshoEn)}`);
-  if(t.choseiKoujo) inc.push(`所得金額調整控除 − ${y(t.choseiKoujo)}`);
-  h += st(++no, '所得（合計所得金額）', `${inc.join('<br>')}<br>→ 合計所得 <b>${y(t.goukei)}円</b>`,
-          '収入から「必要経費の代わりの控除」を引いた額。税金や保険料の計算のもとになります');
+  if(t.kyuyoEn) inc.push(L('給与', `収入 ${y(t.kyuyoEn)} − 給与所得控除 ${y(t.kyuyoKoujoEn)} ＝ ${y(t.kyuyoEn - t.kyuyoKoujoEn)}`));
+  if(t.nenkinEn) inc.push(L('年金', `収入 ${y(t.nenkinEn)} − 公的年金等控除 ${y(t.nenkinKoujoEn)} ＝ ${y(Math.max(0, t.nenkinEn - t.nenkinKoujoEn))}`));
+  if(t.jigyoEn) inc.push(L('事業', `所得 ${y(t.jigyoEn)}`));
+  if(t.zasshoEn) inc.push(L('雑（業務）', `所得 ${y(t.zasshoEn)}`));
+  if(t.choseiKoujo) inc.push(L('所得金額調整控除', `− ${y(t.choseiKoujo)}`));
+  inc.push(L('合計所得', `<b>${y(t.goukei)}円</b>`));
+  h += st(++no, '所得（合計所得金額）', inc, '収入から「必要経費の代わりの控除」を引いた額。税金や保険料の計算のもとになります');
   // 2 社会保険料
-  h += st(++no, '社会保険料', `合計 <b>${y(t.shakaiHoken)}円</b>`, t.shahoBasis.join('<br>'));
+  h += st(++no, '社会保険料', [L('合計', `<b>${y(t.shakaiHoken)}円</b>`)], t.shahoBasis.join('<br>'));
   // 3 所得税
   const r0 = t.rate;
-  h += st(++no, '所得税',
-    `課税所得：合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoTsum)} ＝ ${y(t.kazeiT)}<br>
-     税額：${y(t.kazeiT)} × ${Math.round(r0.税率*100)}% − ${y(r0.控除)} ＝ ${y(t.honzei)}${t.loanT ? `<br>住宅ローン控除：− ${y(t.loanT)}` : ''}<br>
-     復興特別所得税を加える：${y(t.kijunZei)} × 1.021 → <b>${y(t.shotokuzei)}円</b>`,
-    `所得控除の内訳：${list(t.koujoT)}<br>税率は課税所得の段階ごとに5〜45%（超えた部分だけ高い税率）。100円未満切り捨て`);
+  const ln3 = [
+    L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoTsum)} ＝ ${y(t.kazeiT)}`),
+    L('税額', `${y(t.kazeiT)} × ${Math.round(r0.税率*100)}% − ${y(r0.控除)} ＝ ${y(t.honzei)}`),
+  ];
+  if(t.loanT) ln3.push(L('住宅ローン控除', `− ${y(t.loanT)}`));
+  ln3.push(L('復興税込み', `${y(t.kijunZei)} × 1.021 → <b>${y(t.shotokuzei)}円</b>`));
+  h += st(++no, '所得税', ln3, `所得控除の内訳：${list(t.koujoT)}<br>税率は課税所得の段階ごとに5〜45%（超えた部分だけ高い税率）。100円未満切り捨て`);
   // 4 住民税
-  h += st(++no, '住民税',
-    t.wariHi ? `所得割は非課税 ＋ 均等割 ${y(t.kintou)} ＝ <b>${y(t.juminzei)}円</b>` :
-    `課税所得：合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoJsum)} ＝ ${y(t.kazeiJ)}<br>
-     所得割：${y(t.kazeiJ)} × 10% ＝ ${y(t.w0)}${t.chosei ? ` − 調整控除 ${y(t.chosei)}` : ''}${t.loanJ ? ` − 住宅ローン控除 ${y(t.loanJ)}` : ''}<br>
-     ＋ 均等割 ${y(t.kintou)} ＝ <b>${y(t.juminzei)}円</b>`,
-    `住民税の所得控除は所得税より小さめ（基礎控除43万円など）：${list(t.koujoJ)}<br>税率は一律10%。所得割は100円未満切り捨て`);
+  const ln4 = t.wariHi
+    ? [L('所得割', '非課税'), L('均等割', `${y(t.kintou)}`), L('住民税', `<b>${y(t.juminzei)}円</b>`)]
+    : [L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoJsum)} ＝ ${y(t.kazeiJ)}`),
+       L('所得割', `${y(t.kazeiJ)} × 10% ＝ ${y(t.w0)}${t.chosei ? ` − 調整控除 ${y(t.chosei)}` : ''}${t.loanJ ? ` − 住宅ローン控除 ${y(t.loanJ)}` : ''}`),
+       L('均等割', `＋ ${y(t.kintou)}`),
+       L('住民税', `<b>${y(t.juminzei)}円</b>`)];
+  h += st(++no, '住民税', ln4, `住民税の所得控除は所得税より小さめ（基礎控除43万円など）：${list(t.koujoJ)}<br>税率は一律10%。所得割は100円未満切り捨て`);
   // 5 事業税
-  if(t.jigyozei) h += st(++no, '個人事業税', `（事業所得 ${y(t.jigyoEn)} − 事業主控除 2,900,000）× ${t.jigyozeiRitsu}% ＝ <b>${y(t.jigyozei)}円</b>`);
+  if(t.jigyozei) h += st(++no, '個人事業税', [L('事業税', `（事業所得 ${y(t.jigyoEn)} − 事業主控除 2,900,000）× ${t.jigyozeiRitsu}% ＝ <b>${y(t.jigyozei)}円</b>`)]);
   // 6 手取り
-  h += st(++no, '手取り', `額面 ${y(t.gakumen)} − 社会保険料 ${y(t.shakaiHoken)} − 所得税 ${y(t.shotokuzei)} − 住民税 ${y(t.juminzei)}${t.jigyozei ? ` − 事業税 ${y(t.jigyozei)}` : ''} ＝ <b>${y(t.tedori)}円</b>`,
-    '額面は、給与・年金は収入、事業・雑は入力した所得金額の合計');
+  h += st(++no, '手取り', [
+    L('額面', `${y(t.gakumen)}`),
+    L('差し引く', `社会保険料 ${y(t.shakaiHoken)} ＋ 所得税 ${y(t.shotokuzei)} ＋ 住民税 ${y(t.juminzei)}${t.jigyozei ? ` ＋ 事業税 ${y(t.jigyozei)}` : ''}`),
+    L('手取り', `<b>${y(t.tedori)}円</b>`),
+  ], '額面は、給与・年金は収入、事業・雑は入力した所得金額の合計');
   return h;
 }
 function renderScreen(inp, r){
