@@ -43,6 +43,8 @@
   .row label{font-size:14px;color:var(--ink);font-weight:500;flex:0 1 auto;}
   .row .hint{display:block;font-size:11px;color:#8B8F86;font-weight:400;margin-top:3px;line-height:1.5;}
   .field{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+  .field.yen{flex-wrap:wrap;justify-content:flex-end;row-gap:2px;}
+  .man-read{flex-basis:100%;text-align:right;font-size:11px;color:#8B8F86;min-height:1em;padding-right:2.9em;font-family:'JetBrains Mono','Noto Sans JP',monospace;}
   input[type=number],input[type=text],select{
     font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;
     border:1px solid var(--line);border-radius:3px;padding:7px 9px;width:110px;
@@ -188,7 +190,7 @@
         <div id="sonotaRows" style="display:none;">
           <div class="row">
             <label for="sonotaGetsugaku">標準報酬月額<span class="hint">特例退職・任意継続の通知書に記載の金額（初期値はパナソニック健保モデル）</span></label>
-            <div class="field"><input type="number" id="sonotaGetsugaku" value="28" min="0" step="any"><span class="unit">万円</span></div>
+            <div class="field yen"><input type="number" id="sonotaGetsugaku" value="280000" min="0"><span class="unit">円</span><span class="man-read" data-for="sonotaGetsugaku"></span></div>
           </div>
           <div class="row">
             <label for="sonotaRitsu">健康保険料率<span class="hint">通知書の料率（全額自己負担。介護・子ども支援金分は含めない）</span></label>
@@ -213,19 +215,19 @@
           </div>
           <div class="row">
             <label for="haigushaNenshu">配偶者の給与収入<span class="hint">額面。なければ0</span></label>
-            <div class="field"><input type="number" id="haigushaNenshu" value="0" min="0" step="any"><span class="unit">万円</span></div>
+            <div class="field yen"><input type="number" id="haigushaNenshu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaNenshu"></span></div>
           </div>
           <div class="row">
             <label for="haigushaNenkin">配偶者の公的年金収入<span class="hint">年金の年額（控除前）。遺族・障害年金は非課税なので入れない</span></label>
-            <div class="field"><input type="number" id="haigushaNenkin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+            <div class="field yen"><input type="number" id="haigushaNenkin" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaNenkin"></span></div>
           </div>
           <div class="row">
             <label for="haigushaSonota">配偶者のその他の所得<span class="hint">事業所得・雑所得など（経費差引後の所得金額）</span></label>
-            <div class="field"><input type="number" id="haigushaSonota" value="0" min="0" step="any"><span class="unit">万円</span></div>
+            <div class="field yen"><input type="number" id="haigushaSonota" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaSonota"></span></div>
           </div>
           <div class="row row-sub">
             <label for="haigushaGoukei">（わかる場合）配偶者の合計所得金額<span class="hint">本人の確定申告書(57)「配偶者の合計所得金額」、または配偶者の申告書⑫。入れると上の収入欄より優先します</span></label>
-            <div class="field"><input type="number" id="haigushaGoukei" value="" min="0" step="any" placeholder="空欄可"><span class="unit">万円</span></div>
+            <div class="field yen"><input type="number" id="haigushaGoukei" value="" min="0" placeholder="空欄可"><span class="unit">円</span><span class="man-read" data-for="haigushaGoukei"></span></div>
           </div>
         </div>
       </div>
@@ -275,11 +277,11 @@
             <div class="source-inner">
               <div class="row">
                 <label for="nenshu">額面年収<span class="hint">源泉徴収票の「支払金額」欄。2ヶ所以上お勤めの場合は合計額</span></label>
-                <div class="field"><input type="number" id="nenshu" value="500" min="0" step="any"><span class="unit">万円</span></div>
+                <div class="field yen"><input type="number" id="nenshu" value="5000000" min="0"><span class="unit">円</span><span class="man-read" data-for="nenshu"></span></div>
               </div>
               <div class="row">
                 <label for="shoyo">うち賞与（年間）<span class="hint">任意。社会保険料の上限計算に使います。わからなければ0</span></label>
-                <div class="field"><input type="number" id="shoyo" value="0" min="0" step="any"><span class="unit">万円</span></div>
+                <div class="field yen"><input type="number" id="shoyo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="shoyo"></span></div>
               </div>
             </div>
           </div>
@@ -294,7 +296,7 @@
             <div class="source-inner">
               <div class="row">
                 <label for="jigyoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の①（売上 − 経費 − 青色申告特別控除）</span></label>
-                <div class="field"><input type="number" id="jigyoShotoku" value="0" min="0" step="any"><span class="unit">万円</span></div>
+                <div class="field yen"><input type="number" id="jigyoShotoku" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="jigyoShotoku"></span></div>
               </div>
               <div class="row">
                 <label for="aoiro">青色申告特別控除<span class="hint">第一表右下の(59)。税金の計算だけで引く控除で、お金は出ていかないため手取りに足し戻します</span></label>
@@ -330,7 +332,7 @@
             <div class="source-inner">
               <div class="row">
                 <label for="zasshoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の「雑：業務」欄（経費差引後・控除前の金額）</span></label>
-                <div class="field"><input type="number" id="zasshoShotoku" value="0" min="0" step="any"><span class="unit">万円</span></div>
+                <div class="field yen"><input type="number" id="zasshoShotoku" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="zasshoShotoku"></span></div>
               </div>
               <div class="note-box">※事業所得と同様の扱いですが、赤字が出た場合に他の所得と相殺（損益通算）できない点が異なります（本ツールは黒字前提のため計算への影響はありません）。</div>
             </div>
@@ -353,16 +355,16 @@
               </div>
               <div id="nenkinGoukeiRows">
                 <div class="row">
-                  <label for="nenkinGaku">課税される年金の年額<span class="hint">老齢年金・企業年金などの合計（天引き前）を<strong>万円</strong>で。例：1,876,500円 → 187.65。「公的年金等の源泉徴収票」の支払金額を全部足した額、確定申告書なら㋕</span></label>
-                  <div class="field"><input type="number" id="nenkinGaku" value="0" min="0" step="any"><span class="unit">万円</span></div>
+                  <label for="nenkinGaku">課税される年金の年額<span class="hint">老齢年金・企業年金などの合計（天引き前）を円で。「公的年金等の源泉徴収票」の支払金額を全部足した額、確定申告書なら㋕</span></label>
+                  <div class="field yen"><input type="number" id="nenkinGaku" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="nenkinGaku"></span></div>
                 </div>
                 <div class="row row-sub">
                   <label for="hoshuHirei">うち老齢厚生年金（報酬比例部分）<span class="hint">在職老齢年金の判定用。給与があり会社の社会保険に入る60歳以上の人だけ。共済の厚生年金も含む（加給年金・経過的加算は除く）</span></label>
-                  <div class="field"><input type="number" id="hoshuHirei" value="" min="0" step="any" placeholder="空欄可"><span class="unit">万円</span></div>
+                  <div class="field yen"><input type="number" id="hoshuHirei" value="" min="0" placeholder="空欄可"><span class="unit">円</span><span class="man-read" data-for="hoshuHirei"></span></div>
                 </div>
                 <div class="row">
                   <label for="hikazeiNenkin">非課税の年金の年額<span class="hint">遺族年金・障害年金。税金・保険料の計算には含めず、手取りにだけ足します</span></label>
-                  <div class="field"><input type="number" id="hikazeiNenkin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+                  <div class="field yen"><input type="number" id="hikazeiNenkin" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="hikazeiNenkin"></span></div>
                 </div>
               </div>
               <div id="nenkinUchiwakeRows" style="display:none;">
@@ -385,44 +387,44 @@
         <p class="panel-title">その他控除（任意）</p>
         <div class="row">
           <label for="ideco">iDeCo・小規模企業共済の掛金<span class="hint">年間拠出額</span></label>
-          <div class="field"><input type="number" id="ideco" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="ideco" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="ideco"></span></div>
         </div>
 
         <p class="group-label">生命保険料（年間の支払保険料）</p>
         <div class="note-box" style="margin-bottom:6px;">平成23年12月31日以前の契約が「旧」、平成24年1月1日以降が「新」。源泉徴収票の「生命保険料の金額の内訳」、確定申告書第二表の支払保険料欄に新旧別で載っています。</div>
         <div class="row">
           <label for="seimeiIppan">新生命保険料</label>
-          <div class="field"><input type="number" id="seimeiIppan" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="seimeiIppan" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="seimeiIppan"></span></div>
         </div>
         <div class="row">
           <label for="seimeiIppanKyu">旧生命保険料</label>
-          <div class="field"><input type="number" id="seimeiIppanKyu" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="seimeiIppanKyu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="seimeiIppanKyu"></span></div>
         </div>
         <div class="row">
           <label for="seimeiKaigo">介護医療保険料<span class="hint">新制度のみ</span></label>
-          <div class="field"><input type="number" id="seimeiKaigo" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="seimeiKaigo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="seimeiKaigo"></span></div>
         </div>
         <div class="row">
           <label for="seimeiNenkin">新個人年金保険料</label>
-          <div class="field"><input type="number" id="seimeiNenkin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="seimeiNenkin" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="seimeiNenkin"></span></div>
         </div>
         <div class="row">
           <label for="seimeiNenkinKyu">旧個人年金保険料</label>
-          <div class="field"><input type="number" id="seimeiNenkinKyu" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="seimeiNenkinKyu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="seimeiNenkinKyu"></span></div>
         </div>
         <div class="row">
           <label for="jishin">地震保険料（年間）</label>
-          <div class="field"><input type="number" id="jishin" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="jishin" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="jishin"></span></div>
         </div>
 
         <p class="group-label">その他</p>
         <div class="row">
           <label for="sonotaKoujo">その他の所得控除<span class="hint">医療費控除など（所得税・住民税で同額のもの）</span></label>
-          <div class="field"><input type="number" id="sonotaKoujo" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="sonotaKoujo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="sonotaKoujo"></span></div>
         </div>
         <div class="row">
           <label for="jutakuLoan">住宅ローン控除額<span class="hint">年末調整・確定申告での控除額（年末残高×0.7%など）。所得税で引ききれない分は住民税から</span></label>
-          <div class="field"><input type="number" id="jutakuLoan" value="0" min="0" step="any"><span class="unit">万円</span></div>
+          <div class="field yen"><input type="number" id="jutakuLoan" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="jutakuLoan"></span></div>
         </div>
         <div class="row">
           <label for="jutakuKikan">住宅ローンの入居時期<span class="hint">住民税から引ける上限が変わります</span></label>
@@ -959,6 +961,16 @@ const fmt = v => Number(v).toLocaleString('ja-JP', { maximumFractionDigits: 1 })
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const activeOf = toggle => toggle.querySelector('.active').dataset.v;
 const num = id => Math.max(0, parseFloat($(id).value)||0);
+// 金額欄は円で入力し、計算の中では万円で扱う
+const numY = id => num(id) / 10000;
+const YEN_IDS = ['sonotaGetsugaku','haigushaNenshu','haigushaNenkin','haigushaSonota','haigushaGoukei','nenshu','shoyo','jigyoShotoku','zasshoShotoku','nenkinGaku','hoshuHirei','hikazeiNenkin','ideco','seimeiIppan','seimeiIppanKyu','seimeiKaigo','seimeiNenkin','seimeiNenkinKyu','jishin','sonotaKoujo','jutakuLoan'];
+function manReadText(v){
+  const n = parseFloat(v); if(!(n>0)) return '';
+  const m = n/10000;
+  return m >= 1 ? '＝ ' + m.toLocaleString('ja-JP', { maximumFractionDigits: 2 }) + '万円' : '';
+}
+function updateManRead(el){ const r = document.querySelector(`.man-read[data-for="${el.id}"]`); if(r) r.textContent = manReadText(el.value); }
+document.addEventListener('input', e=>{ if(e.target.id && YEN_IDS.includes(e.target.id)) updateManRead(e.target); });
 
 function setupToggle(toggle, onChange){
   toggle.addEventListener('click', (e)=>{
@@ -1080,7 +1092,7 @@ function readNenkin(){
     const u = nenkinUchiwake();
     return { has, mode:'uchiwake', uchiwake:u, nenkinMan: u.kazei/10000, hoshuMan: u.hoshu/10000, hikazeiMan: u.hikazei/10000 };
   }
-  return { has, mode:'goukei', nenkinMan: num('nenkinGaku'), hoshuMan: num('hoshuHirei'), hikazeiMan: num('hikazeiNenkin') };
+  return { has, mode:'goukei', nenkinMan: numY('nenkinGaku'), hoshuMan: numY('hoshuHirei'), hikazeiMan: numY('hikazeiNenkin') };
 }
 
 // ===== 入力の読み取り =====
@@ -1089,18 +1101,18 @@ function readInputs(){
   const kodomo = activeOf(kodomoToggle)==='yes' ? readDeps(kodomoList, 'kodomo') : [];
   const oya = activeOf(oyaToggle)==='yes' ? readDeps(oyaList, 'oya') : [];
   return {
-    kyuyo: { has: $('has-kyuyo').checked, nenshuMan: num('nenshu'), shoyoMan: num('shoyo') },
-    jigyo: { has: $('has-jigyo').checked, shotokuMan: num('jigyoShotoku'), aoiroMan: parseFloat($('aoiro').value)||0, zeiritsu: parseFloat($('jigyozeiRitsu').value)||0 },
-    zassho: { has: $('has-zassho').checked, shotokuMan: num('zasshoShotoku') },
+    kyuyo: { has: $('has-kyuyo').checked, nenshuMan: numY('nenshu'), shoyoMan: numY('shoyo') },
+    jigyo: { has: $('has-jigyo').checked, shotokuMan: numY('jigyoShotoku'), aoiroMan: parseFloat($('aoiro').value)||0, zeiritsu: parseFloat($('jigyozeiRitsu').value)||0 },
+    zassho: { has: $('has-zassho').checked, shotokuMan: numY('zasshoShotoku') },
     nenkin: readNenkin(),
     age: parseInt($('age').value)||0,
     shahokenType: activeOf(shahokenToggle),
     kenpoRitsu: num('kenpoRitsu')/100,
-    sonota: { getsugakuMan: num('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
-    haigusha: hasHaigusha ? { nenshuMan: num('haigushaNenshu'), nenkinMan: num('haigushaNenkin'), sonotaMan: num('haigushaSonota'), goukeiMan: $('haigushaGoukei').value.trim()==='' ? null : num('haigushaGoukei'), age: parseInt($('haigushaAge').value)||0 } : null,
+    sonota: { getsugakuMan: numY('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
+    haigusha: hasHaigusha ? { nenshuMan: numY('haigushaNenshu'), nenkinMan: numY('haigushaNenkin'), sonotaMan: numY('haigushaSonota'), goukeiMan: $('haigushaGoukei').value.trim()==='' ? null : numY('haigushaGoukei'), age: parseInt($('haigushaAge').value)||0 } : null,
     koujo: {
-      idecoMan: num('ideco'), seimeiIppanMan: num('seimeiIppan'), seimeiKaigoMan: num('seimeiKaigo'), seimeiNenkinMan: num('seimeiNenkin'), seimeiIppanKyuMan: num('seimeiIppanKyu'), seimeiNenkinKyuMan: num('seimeiNenkinKyu'),
-      jishinMan: num('jishin'), sonotaMan: num('sonotaKoujo'), jutakuLoanMan: num('jutakuLoan'), jutakuKikan: $('jutakuKikan').value,
+      idecoMan: numY('ideco'), seimeiIppanMan: numY('seimeiIppan'), seimeiKaigoMan: numY('seimeiKaigo'), seimeiNenkinMan: numY('seimeiNenkin'), seimeiIppanKyuMan: numY('seimeiIppanKyu'), seimeiNenkinKyuMan: numY('seimeiNenkinKyu'),
+      jishinMan: numY('jishin'), sonotaMan: numY('sonotaKoujo'), jutakuLoanMan: numY('jutakuLoan'), jutakuKikan: $('jutakuKikan').value,
     },
     otherIncome: $('otherIncome').checked,
     kodomo, oya,
@@ -1405,7 +1417,7 @@ function snapshot(){
   const toggles = {};
   TOGGLES.forEach(id => toggles[id] = activeOf($(id)));
   const deps = list => [...list.children].map(el=>({ age: el.querySelector('.dep-age').value, doukyo: el.querySelector('.dep-doukyo').value }));
-  return { fields, toggles, kodomo: deps(kodomoList), oya: deps(oyaList), savedAt: Date.now() };
+  return { fields, toggles, kodomo: deps(kodomoList), oya: deps(oyaList), unit: 'yen', savedAt: Date.now() };
 }
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(snapshot())); }catch(e){}
@@ -1414,6 +1426,10 @@ function restoreState(){
   let st = null;
   try{ st = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); }catch(e){}
   if(!st) return false;
+  // 金額欄が万円だった頃の保存データは円に直す
+  if(st.unit !== 'yen' && st.fields){
+    YEN_IDS.forEach(id=>{ const v = st.fields[id]; if(v!=null && String(v).trim()!=='' && !isNaN(parseFloat(v))) st.fields[id] = String(Math.round(parseFloat(v)*10000)); });
+  }
   // 入力欄・チェックボックス（先に戻し、トグルは後で上書き）
   Object.entries(st.fields || {}).forEach(([id, v])=>{
     const el = $(id); if(!el) return;
@@ -1451,9 +1467,10 @@ $('clearBtn').addEventListener('click', ()=>{
   location.reload();
 });
 restoreState();
+YEN_IDS.forEach(id=>{ if($(id)) updateManRead($(id)); });
 
 // ===== お客様ごとの入力をファイル（JSON）に保存・読み込み =====
-const TOOL_ID = 'tedori-shindan', TOOL_NAME = '手取り診断', TOOL_COMPAT = [], TOOL_NAMES = {'tedori-shindan':'手取り診断','juminzei-keisan':'住民税かんたん計算','furusato-jougen':'ふるさと納税 上限かんたん計算'};
+const TOOL_ID = 'tedori-shindan', TOOL_NAME = '手取り診断', TOOL_COMPAT = [], TOOL_NAMES = {'tedori-shindan':'手取り診断','juminzei-keisan':'住民税かんたん計算','furusato-jougen':'ふるさと納税 上限かんたん計算','juminzei-furusato':'住民税・ふるさと納税上限 かんたん計算'};
 document.getElementById('jsonSaveBtn').addEventListener('click', ()=>{
   if(!document.getElementById('atena').value.trim() && !confirm('宛名が空欄です。ファイル名に名前が入りませんが、保存しますか？\n（名前を入れる場合は「キャンセル」を押して、PDF欄の宛名に入力してください）')){ document.getElementById('atena').focus(); return; }
   const data = { tool: TOOL_ID, toolName: TOOL_NAME, version: 1, atena: document.getElementById('atena').value.trim(), ...snapshot() };
@@ -1478,7 +1495,7 @@ document.getElementById('jsonFile').addEventListener('change', async e=>{
   }
   if(!confirm(`「${file.name}」を開きます。いま入っている入力は置き換わります。よろしいですか？`)) return;
   try{
-    localStorage.setItem(STORE_KEY, JSON.stringify({ fields: data.fields, toggles: data.toggles || {}, kodomo: data.kodomo, oya: data.oya, savedAt: data.savedAt }));
+    localStorage.setItem(STORE_KEY, JSON.stringify({ fields: data.fields, toggles: data.toggles || {}, kodomo: data.kodomo, oya: data.oya, unit: data.unit, savedAt: data.savedAt }));
     sessionStorage.setItem(STORE_KEY + ':opened', file.name);
   }catch(err){ alert('このブラウザでは読み込めませんでした（保存領域が使えない設定です）。'); return; }
   window.removeEventListener('pagehide', saveState);
