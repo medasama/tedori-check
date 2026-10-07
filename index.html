@@ -439,6 +439,12 @@
         <span id="saveStatus">入力内容はこのブラウザに自動で保存されます</span>
         <button type="button" id="clearBtn" style="border:none;background:none;color:var(--accent);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;">入力をクリア</button>
       </div>
+      <div class="file-box" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button type="button" id="jsonSaveBtn" class="pdf-btn secondary" style="flex:1 1 150px;padding:9px;font-size:13px;">入力をファイルに保存</button>
+        <button type="button" id="jsonOpenBtn" class="pdf-btn secondary" style="flex:1 1 150px;padding:9px;font-size:13px;">保存したファイルを開く</button>
+        <input type="file" id="jsonFile" accept=".json,application/json" style="display:none;">
+      </div>
+      <p style="font-size:11px;color:#8B8F86;margin:6px 0 0;">お客様ごとに保存できます（ファイル名：宛名＋日付）。開くと、保存したときの入力に置き換わります。</p>
     </div>
 
     <div class="panel result-panel">
@@ -1445,6 +1451,43 @@ $('clearBtn').addEventListener('click', ()=>{
   location.reload();
 });
 restoreState();
+
+// ===== お客様ごとの入力をファイル（JSON）に保存・読み込み =====
+const TOOL_ID = 'tedori-shindan', TOOL_NAME = '手取り診断', TOOL_COMPAT = [], TOOL_NAMES = {'tedori-shindan':'手取り診断','juminzei-keisan':'住民税かんたん計算','furusato-jougen':'ふるさと納税 上限かんたん計算'};
+document.getElementById('jsonSaveBtn').addEventListener('click', ()=>{
+  if(!document.getElementById('atena').value.trim() && !confirm('宛名が空欄です。ファイル名に名前が入りませんが、保存しますか？\n（名前を入れる場合は「キャンセル」を押して、PDF欄の宛名に入力してください）')){ document.getElementById('atena').focus(); return; }
+  const data = { tool: TOOL_ID, toolName: TOOL_NAME, version: 1, atena: document.getElementById('atena').value.trim(), ...snapshot() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = pdfFileName().replace(/\.pdf$/, '.json');
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  document.getElementById('saveStatus').textContent = `「${a.download}」を保存しました`;
+});
+document.getElementById('jsonOpenBtn').addEventListener('click', ()=> document.getElementById('jsonFile').click());
+document.getElementById('jsonFile').addEventListener('change', async e=>{
+  const file = e.target.files[0]; e.target.value = '';
+  if(!file) return;
+  let data;
+  try{ data = JSON.parse(await file.text()); }catch(err){ alert('ファイルを読み込めませんでした。このツールで保存したJSONファイルを選んでください。'); return; }
+  if(!data || typeof data !== 'object' || !data.fields){ alert('このツールで保存したファイルではないようです。'); return; }
+  if(data.tool && data.tool !== TOOL_ID){
+    const from = TOOL_NAMES[data.tool] || data.tool;
+    if(!TOOL_COMPAT.includes(data.tool)){ alert(`このファイルは「${from}」で保存したものです。そちらのツールで開いてください。`); return; }
+    if(!confirm(`このファイルは「${from}」で保存したものです。共通の項目だけ読み込みますか？`)) return;
+  }
+  if(!confirm(`「${file.name}」を開きます。いま入っている入力は置き換わります。よろしいですか？`)) return;
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({ fields: data.fields, toggles: data.toggles || {}, kodomo: data.kodomo, oya: data.oya, savedAt: data.savedAt }));
+    sessionStorage.setItem(STORE_KEY + ':opened', file.name);
+  }catch(err){ alert('このブラウザでは読み込めませんでした（保存領域が使えない設定です）。'); return; }
+  window.removeEventListener('pagehide', saveState);
+  location.reload();
+});
+(function(){
+  let opened = null; try{ opened = sessionStorage.getItem(STORE_KEY + ':opened'); sessionStorage.removeItem(STORE_KEY + ':opened'); }catch(e){}
+  if(opened) document.getElementById('saveStatus').textContent = `「${opened}」を開きました`;
+})();
 </script>
 </body>
 </html>
