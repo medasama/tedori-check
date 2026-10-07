@@ -419,15 +419,15 @@
 
         <p class="group-label">その他</p>
         <div class="row">
-          <label for="iryo">医療費控除<span class="hint">確定申告書の㉘ 医療費控除の額（セルフメディケーション税制の控除額も可）</span></label>
+          <label for="iryo">医療費の目安（年間の支払額）<span class="hint">病院・薬局などで1年に払う額の見込み（保険金などで補填される分は除く）。10万円（所得200万円未満は所得の5%）を超えた分を医療費控除として自動計算します（上限200万円）</span></label>
           <div class="field yen"><input type="number" id="iryo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="iryo"></span></div>
         </div>
         <div class="row">
-          <label for="furusatoKifu">ふるさと納税の寄附額<span class="hint">都道府県・市区町村への寄附の合計。確定申告書から写すなら ㉙ 寄附金控除 ＋ 2,000円。減る税金を反映し、寄附した額は手取りから差し引きます（上限内なら差し引き2,000円の負担）</span></label>
+          <label for="furusatoKifu">ふるさと納税額の目安<span class="hint">都道府県・市区町村への寄附の合計。確定申告書から写すなら ㉙ 寄附金控除 ＋ 2,000円。減る税金を反映し、寄附した額は手取りから差し引きます（上限内なら差し引き2,000円の負担）</span></label>
           <div class="field yen"><input type="number" id="furusatoKifu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="furusatoKifu"></span></div>
         </div>
         <div class="row">
-          <label for="sonotaKoujo">その他の所得控除<span class="hint">家族分の国民年金・国保など、所得税と住民税で同じ額になる控除。ふるさと納税以外の寄附（認定NPOなど）は対象外</span></label>
+          <label for="sonotaKoujo">その他の所得控除<span class="hint">家族分の国民年金・国保、国民年金基金など、所得税と住民税で同じ額になる控除だけ。確定申告書の医療費控除（㉘）やセルフメディケーション税制の控除額をそのまま使う場合もここへ（上の医療費の目安は0に）。寡婦・ひとり親・障害者の控除、ふるさと納税以外の寄附は対象外</span></label>
           <div class="field yen"><input type="number" id="sonotaKoujo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="sonotaKoujo"></span></div>
         </div>
         <div class="row">
@@ -479,7 +479,7 @@
     </div>
   </div>
 
-  <p class="note" id="disclaimerText">本ツールの税額・社会保険料は概算です。所得税は令和8年分（令和8年度税制改正後）、住民税はその所得に対して課税される令和9年度分を想定しています（住民税は実際には翌年度に課税されます）。社会保険料は令和8年度の料率（協会けんぽ兵庫支部・芦屋市国民健康保険・兵庫県後期高齢者医療・芦屋市介護保険）を基にした概算で、芦屋市以外の方は目安精度が落ちます。国保・後期高齢者医療は「本人が世帯主で、加入者は本人のみ」として計算しています。ひとり親・寡婦・障害者控除、ふるさと納税、不動産・配当・譲渡所得、高齢任意加入（70歳以上で年金の受給資格期間を満たしていない方の厚生年金への任意加入）、会社都合退職などによる国民健康保険料の軽減（非自発的失業者軽減）は対象外です。遺族年金・障害年金は非課税のため、「非課税の年金」欄に入れてください（税・保険料の計算には含めず、手取りにだけ足します）。公的年金等控除は令和8年分の規定で計算しています（令和9年分からは、給与と年金の両方がある方について給与所得控除と公的年金等控除の合計に上限が設けられる予定です）。正式な金額は源泉徴収票・住民税決定通知書・各保険料決定通知書等でご確認ください。</p>
+  <p class="note" id="disclaimerText">本ツールの税額・社会保険料は概算です。所得税は令和8年分（令和8年度税制改正後）、住民税はその所得に対して課税される令和9年度分を想定しています（住民税は実際には翌年度に課税されます）。社会保険料は令和8年度の料率（協会けんぽ兵庫支部・芦屋市国民健康保険・兵庫県後期高齢者医療・芦屋市介護保険）を基にした概算で、芦屋市以外の方は目安精度が落ちます。国保・後期高齢者医療は「本人が世帯主で、加入者は本人のみ」として計算しています。ひとり親・寡婦・障害者控除、不動産・配当・譲渡所得、高齢任意加入（70歳以上で年金の受給資格期間を満たしていない方の厚生年金への任意加入）、会社都合退職などによる国民健康保険料の軽減（非自発的失業者軽減）は対象外です。ふるさと納税は、上限内なら税金が「寄附額−2,000円」減るとして計算しています（ワンストップ特例の場合）。遺族年金・障害年金は非課税のため、「非課税の年金」欄に入れてください（税・保険料の計算には含めず、手取りにだけ足します）。公的年金等控除は令和8年分の規定で計算しています（令和9年分からは、給与と年金の両方がある方について給与所得控除と公的年金等控除の合計に上限が設けられる予定です）。正式な金額は源泉徴収票・住民税決定通知書・各保険料決定通知書等でご確認ください。</p>
 </div>
 
 <div id="reportHost"><div id="report"></div></div>
@@ -898,7 +898,9 @@ function calcAll(input){
   const premiums = { ippanShin: manToEn(koujo.seimeiIppanMan), ippanKyu: manToEn(koujo.seimeiIppanKyuMan), kaigo: manToEn(koujo.seimeiKaigoMan), nenkinShin: manToEn(koujo.seimeiNenkinMan), nenkinKyu: manToEn(koujo.seimeiNenkinKyuMan) };
   const jishinEn = manToEn(koujo.jishinMan);
   const sonotaEn = manToEn(koujo.sonotaMan);
-  const iryoEn = manToEn(koujo.iryoMan);
+  const iryoPayEn = manToEn(koujo.iryoMan); // 医療費の支払額（目安）
+  const iryoAshikiri = Math.min(100000, Math.floor(goukei * 0.05)); // 足切り：10万円か総所得の5%の少ない方
+  const iryoEn = Math.min(2000000, Math.max(0, iryoPayEn - iryoAshikiri)); // 医療費控除（上限200万円）
   const kifuEn = manToEn(koujo.furusatoMan);
   // ふるさと納税：所得税は寄附金控除（寄附額−2,000円、総所得の40%まで）、住民税は税額から直接引く
   const onestop = true; // 手取り診断ではワンストップ特例の前提で計算（上限内なら自己負担2,000円）
@@ -993,6 +995,11 @@ function calcAll(input){
     課税所得_所得税: enToMan(kazeiT), 課税所得_住民税: enToMan(kazeiJ),
     住宅ローン控除_所得税: enToMan(loanT), 住宅ローン控除_住民税: enToMan(loanJ),
     手取り: enToMan(tedori), 手取り月額: enToMan(tedori/12), 寄附: enToMan(kifuEn),
+    目安: (()=>{
+      const rT = kazeiT > 0 ? tableLookup(PARAMS.所得税速算表, kazeiT).税率 * (1 + PARAMS.復興税率) : 0;
+      const rJ = shotokuwariHikazei ? 0 : PARAMS.住民税.税率;
+      return { 寄附上限: shotokuwariHikazei ? 0 : Math.floor(kifuLimit/1000)*1000, 寄附: kifuEn, 医療費足切り: iryoAshikiri, 医療費1万あたり: Math.round(10000*(rT + rJ)/100)*100, 医療費支払: iryoPayEn, 医療費控除: iryoEn };
+    })(),
     警告: warns, 注記: notes,
     _en: { tedori, shotokuzei, juminzei, shakaiHoken, kazeiT, kazeiJ, goukei, shaho, jigyozei, chosei },
     _steps: {
@@ -1200,7 +1207,7 @@ function stepsHTML(inp, r){
     <div class="step"><div class="sno">${no}</div><div class="sbody">
       <div class="stitle">${title}</div><div class="sformula">${lines.join('')}</div>${note ? `<div class="snote">${note}</div>` : ''}
     </div></div>`;
-  const list = obj => Object.entries(obj).filter(([,v])=>v>0).map(([k,v])=>`${k} ${y(v)}`).join('／');
+  const list = obj => Object.entries(obj).filter(([,v])=>v>0).map(([k,v])=>`・${k} ${y(v)}`).join('<br>');
   let no = 0, h = '';
   // 1 所得
   const inc = [];
@@ -1211,26 +1218,26 @@ function stepsHTML(inp, r){
   if(t.zasshoEn) inc.push(L('雑（業務）', `所得 ${y(t.zasshoEn)}`));
   if(t.choseiKoujo) inc.push(L('所得金額調整控除', `− ${y(t.choseiKoujo)}`));
   inc.push(L('合計所得', `<b>${y(t.goukei)}円</b>`));
-  h += st(++no, '所得（合計所得金額）', inc, '収入から「必要経費の代わりの控除」を引いた額。税金や保険料の計算のもとになります');
-  // 2 社会保険料
-  h += st(++no, '社会保険料', [L('合計', `<b>${y(t.shakaiHoken)}円</b>`)], t.shahoBasis.join('<br>'));
+  h += st(++no, '所得（合計所得金額）', inc, '会社員や年金の人は経費を引けない代わりに、法律で決まった額を収入から差し引けます（給与なら「給与所得控除」、年金なら「公的年金等控除」）。収入からこれを引いた額が「所得」で、その合計（合計所得）が税金や国保・介護保険料の計算のもとになります。事業・副業は、売上から経費を引いた所得をそのまま使います');
+  // 2 社会保険料（所得税・住民税の社会保険料控除にもなる）
+  h += st(++no, '社会保険料（所得税・住民税の控除にもなる）', [L('合計', `<b>${y(t.shakaiHoken)}円</b>`)], t.shahoBasis.join('<br>') + '<br>この合計は、所得税（③）と住民税（④）で「社会保険料控除」として所得から引かれます');
   // 3 所得税
   const r0 = t.rate;
   const ln3 = [
-    L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoTsum)} ＝ ${y(t.kazeiT)}`),
+    L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoTsum)}（②の社会保険料を含む）＝ ${y(t.kazeiT)}`),
     L('税額', `${y(t.kazeiT)} × ${Math.round(r0.税率*100)}% − ${y(r0.控除)} ＝ ${y(t.honzei)}`),
   ];
   if(t.loanT) ln3.push(L('住宅ローン控除', `− ${y(t.loanT)}`));
   ln3.push(L('復興税込み', `${y(t.kijunZei)} × 1.021 → <b>${y(t.shotokuzei)}円</b>`));
-  h += st(++no, '所得税', ln3, `所得控除の内訳：${list(t.koujoT)}<br>税率は課税所得の段階ごとに5〜45%（超えた部分だけ高い税率）。100円未満切り捨て`);
+  h += st(++no, '所得税', ln3, `所得控除の内訳<br>${list(t.koujoT)}<br>税率は課税所得の段階ごとに5〜45%（超えた部分だけ高い税率）。100円未満切り捨て`);
   // 4 住民税
   const ln4 = t.wariHi
     ? [L('所得割', '非課税'), L('均等割', `${y(t.kintou)}`), L('住民税', `<b>${y(t.juminzei)}円</b>`)]
-    : [L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoJsum)} ＝ ${y(t.kazeiJ)}`),
+    : [L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoJsum)}（②の社会保険料を含む）＝ ${y(t.kazeiJ)}`),
        L('所得割', `${y(t.kazeiJ)} × 10% ＝ ${y(t.w0)}${t.chosei ? ` − 調整控除 ${y(t.chosei)}` : ''}${t.loanJ ? ` − 住宅ローン控除 ${y(t.loanJ)}` : ''}${t.kifuKihon+t.kifuTokurei+t.kifuShinkoku ? ` − ふるさと納税 ${y(t.kifuKihon+t.kifuTokurei+t.kifuShinkoku)}` : ''}`),
        L('均等割', `＋ ${y(t.kintou)}`),
        L('住民税', `<b>${y(t.juminzei)}円</b>`)];
-  h += st(++no, '住民税', ln4, `住民税の所得控除は所得税より小さめ（基礎控除43万円など）：${list(t.koujoJ)}<br>税率は一律10%。所得割は100円未満切り捨て${t.kifuEn ? `<br>ふるさと納税は住民税では税額から直接引きます：基本分 ${y(t.kifuKihon)}＋特例分 ${y(t.kifuTokurei)}${t.kifuShinkoku ? `＋申告特例分 ${y(t.kifuShinkoku)}` : ''}（上限の目安 約${y(Math.floor(t.kifuLimit/1000)*1000)}円）` : ''}`);
+  h += st(++no, '住民税', ln4, `所得控除の内訳（住民税は所得税より小さめ。基礎控除43万円など）<br>${list(t.koujoJ)}<br>税率は一律10%。所得割は100円未満切り捨て${t.kifuEn ? `<br>ふるさと納税は住民税では税額から直接引きます：基本分 ${y(t.kifuKihon)}＋特例分 ${y(t.kifuTokurei)}${t.kifuShinkoku ? `＋申告特例分 ${y(t.kifuShinkoku)}` : ''}（上限の目安 約${y(Math.floor(t.kifuLimit/1000)*1000)}円）` : ''}`);
   // 5 事業税
   if(t.jigyozei) h += st(++no, '個人事業税', [L('事業税', `（事業所得 ${y(t.jigyoEn)}${t.aoiroEn ? ` ＋ 青色申告特別控除 ${y(t.aoiroEn)}` : ''} − 事業主控除 2,900,000）× ${t.jigyozeiRitsu}% ＝ <b>${y(t.jigyozei)}円</b>`)]);
   // 6 手取り
@@ -1240,6 +1247,18 @@ function stepsHTML(inp, r){
     L('手取り', `<b>${y(t.tedori)}円</b>`),
   ], `額面は、給与・年金は収入、事業・雑は所得金額の合計${t.aoiroEn ? `。事業は青色申告特別控除 ${y(t.aoiroEn)} を足し戻した額（＝売上 − 経費）` : ''}${t.hikazeiNenkinEn ? `。非課税の年金 ${y(t.hikazeiNenkinEn)} を含む（税・保険料はかからない）` : ''}`);
   return h;
+}
+function meyasuLines(r){
+  const m = r.目安, y = v => Math.round(v).toLocaleString('ja-JP');
+  const f = (m.寄附上限 > 0 && m.寄附上限 < 10000) ? `約${y(m.寄附上限)}円まで。住民税の所得割が少ないため、ふるさと納税のメリットはほとんどありません`
+    : m.寄附上限 > 0
+    ? `約${y(m.寄附上限)}円まで（自己負担2,000円）${m.寄附 ? `　→ 目安の欄 ${y(m.寄附)}円${m.寄附 > m.寄附上限 ? '（上限を超えています）' : '（上限内）'}` : ''}`
+    : '住民税の所得割がかからないため、控除はありません';
+  const i = `年間の医療費が${y(m.医療費足切り)}円を超えると控除の対象。超えた1万円ごとに税金が約${y(m.医療費1万あたり)}円減ります${m.医療費支払 ? `　→ 目安の欄 ${y(m.医療費支払)}円で控除 ${y(m.医療費控除)}円` : ''}`;
+  return [['ふるさと納税の上限の目安', f], ['医療費控除の目安', i]];
+}
+function meyasuHTML(r){
+  return `<div class="info"><b>参考</b>${meyasuLines(r).map(([k,v])=>`<div style="margin-top:4px;"><b>${k}</b>：${v}</div>`).join('')}</div>`;
 }
 function renderScreen(inp, r){
   const shahoEntries = Object.entries(r.社保内訳);
@@ -1270,6 +1289,7 @@ function renderScreen(inp, r){
     </div>
     ${allWarns(inp, r).map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join('')}
     ${r.注記.map(n=>`<div class="info">${esc(n)}</div>`).join('')}
+    ${meyasuHTML(r)}
     <details class="howto"><summary>計算方法を見る</summary><div class="steps">${stepsHTML(inp, r)}</div></details>
   `;
   $('shahoRow').addEventListener('click', ()=>{
@@ -1316,8 +1336,8 @@ function buildReport(inp, r){
   const seimei = [['新生命',k.seimeiIppanMan],['旧生命',k.seimeiIppanKyuMan],['介護医療',k.seimeiKaigoMan],['新個人年金',k.seimeiNenkinMan],['旧個人年金',k.seimeiNenkinKyuMan]].filter(([,v])=>v>0);
   if(seimei.length) cond.push(['生命保険料（年間）', seimei.map(([n,v])=>`${n} ${fmt(v)}万円`).join('、')]);
   if(k.jishinMan>0) cond.push(['地震保険料（年間）', `${fmt(k.jishinMan)}万円`]);
-  if(k.iryoMan>0) cond.push(['医療費控除', `${fmt(k.iryoMan)}万円`]);
-  if(k.furusatoMan>0) cond.push(['ふるさと納税の寄附額', `${fmt(k.furusatoMan)}万円`]);
+  if(k.iryoMan>0) cond.push(['医療費（年間の支払額の目安）', `${fmt(k.iryoMan)}万円`]);
+  if(k.furusatoMan>0) cond.push(['ふるさと納税額の目安', `${fmt(k.furusatoMan)}万円`]);
   if(k.sonotaMan>0) cond.push(['その他の所得控除', `${fmt(k.sonotaMan)}万円`]);
   if(k.jutakuLoanMan>0) cond.push(['住宅ローン控除額', `${fmt(k.jutakuLoanMan)}万円（入居：${({r4:'令和4年以降',h26:'平成26年4月〜令和3年',h21:'平成21年〜平成26年3月'})[k.jutakuKikan]}）`]);
   const condRows = cond.map(([a,b])=> `<tr><td class="k">${a}</td><td>${esc(b)}</td></tr>`).join('');
@@ -1332,6 +1352,7 @@ function buildReport(inp, r){
     ['課税所得（所得税）', `${fmt(r.課税所得_所得税)} 万円`],
     ['課税所得（住民税）', `${fmt(r.課税所得_住民税)} 万円`],
   ];
+  meyasuLines(r).forEach(x=>ref.push(x));
   if(r.住宅ローン控除_所得税>0 || r.住宅ローン控除_住民税>0){
     ref.push(['住宅ローン控除（所得税／住民税）', `${fmt(r.住宅ローン控除_所得税)} ／ ${fmt(r.住宅ローン控除_住民税)} 万円`]);
   }
@@ -1379,7 +1400,7 @@ function buildReport(inp, r){
 
     <div class="avoid">
       <h3>参考</h3>
-      <table>${ref.map(([a,b])=>`<tr><td class="k">${a}</td><td class="n">${b}</td></tr>`).join('')}</table>
+      <table>${ref.map(([a,b])=>`<tr><td class="k">${a}</td><td class="${String(b).length>24?'':'n'}" style="${String(b).length>24?'font-size:10.5px;':''}">${esc(b)}</td></tr>`).join('')}</table>
     </div>
 
     ${allWarns(inp, r).map(w=>`<div class="rp-warn avoid">⚠ ${esc(w)}</div>`).join('')}
