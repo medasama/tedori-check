@@ -190,7 +190,7 @@
         <div id="sonotaRows" style="display:none;">
           <div class="row">
             <label for="sonotaGetsugaku">標準報酬月額<span class="hint">特例退職・任意継続の通知書に記載の金額（初期値はパナソニック健保モデル）</span></label>
-            <div class="field yen"><input type="number" id="sonotaGetsugaku" value="280000" min="0"><span class="unit">円</span><span class="man-read" data-for="sonotaGetsugaku"></span></div>
+            <div class="field"><input type="number" id="sonotaGetsugaku" value="28" min="0" step="any"><span class="unit">万円</span></div>
           </div>
           <div class="row">
             <label for="sonotaRitsu">健康保険料率<span class="hint">通知書の料率（全額自己負担。介護・子ども支援金分は含めない）</span></label>
@@ -419,7 +419,15 @@
 
         <p class="group-label">その他</p>
         <div class="row">
-          <label for="sonotaKoujo">その他の所得控除<span class="hint">医療費控除など（所得税・住民税で同額のもの）</span></label>
+          <label for="iryo">医療費控除<span class="hint">確定申告書の㉘ 医療費控除の額（セルフメディケーション税制の控除額も可）</span></label>
+          <div class="field yen"><input type="number" id="iryo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="iryo"></span></div>
+        </div>
+        <div class="row">
+          <label for="furusatoKifu">ふるさと納税の寄附額<span class="hint">都道府県・市区町村への寄附の合計。確定申告書から写すなら ㉙ 寄附金控除 ＋ 2,000円。減る税金を反映し、寄附した額は手取りから差し引きます（上限内なら差し引き2,000円の負担）</span></label>
+          <div class="field yen"><input type="number" id="furusatoKifu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="furusatoKifu"></span></div>
+        </div>
+        <div class="row">
+          <label for="sonotaKoujo">その他の所得控除<span class="hint">家族分の国民年金・国保など、所得税と住民税で同じ額になる控除。ふるさと納税以外の寄附（認定NPOなど）は対象外</span></label>
           <div class="field yen"><input type="number" id="sonotaKoujo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="sonotaKoujo"></span></div>
         </div>
         <div class="row">
@@ -685,6 +693,25 @@ function calcShotokuzei(kazei){
   return Math.max(0, Math.round(kazei*row.税率 - row.控除));
 }
 // 住民税の調整控除（人的控除差調整額）
+// 人的控除の差（調整控除・ふるさと納税の特例分の税率判定に使う）
+function jintekiSa(goukei, haiRes, deps){
+  if(goukei > 25000000) return 0;
+  const d = PARAMS.住民税.調整控除_人的控除差;
+  let sa = d.基礎;
+  const col = colByHonnin(goukei);
+  if(haiRes.区分==='一般' && col) sa += d.配偶者[col];
+  if(haiRes.区分==='老人' && col) sa += d.老人配偶者[col];
+  for(const x of deps){
+    if(x.kubun==='kodomo'){
+      if(x.age<=15) continue;
+      sa += (x.age>=19 && x.age<=22) ? d.特定扶養 : d.扶養一般;
+    } else {
+      if(x.age<70) sa += d.扶養一般;
+      else sa += x.doukyo ? d.同居老親 : d.老人扶養;
+    }
+  }
+  return sa;
+}
 function calcChoseiKoujo(kazeiJ, goukei, hai, haiRes, deps){
   if(goukei > 25000000) return 0;
   const d = PARAMS.住民税.調整控除_人的控除差;
@@ -871,13 +898,18 @@ function calcAll(input){
   const premiums = { ippanShin: manToEn(koujo.seimeiIppanMan), ippanKyu: manToEn(koujo.seimeiIppanKyuMan), kaigo: manToEn(koujo.seimeiKaigoMan), nenkinShin: manToEn(koujo.seimeiNenkinMan), nenkinKyu: manToEn(koujo.seimeiNenkinKyuMan) };
   const jishinEn = manToEn(koujo.jishinMan);
   const sonotaEn = manToEn(koujo.sonotaMan);
+  const iryoEn = manToEn(koujo.iryoMan);
+  const kifuEn = manToEn(koujo.furusatoMan);
+  // ふるさと納税：所得税は寄附金控除（寄附額−2,000円、総所得の40%まで）、住民税は税額から直接引く
+  const onestop = true; // 手取り診断ではワンストップ特例の前提で計算（上限内なら自己負担2,000円）
+  const kifuT = (!onestop && kifuEn > 2000) ? Math.max(0, Math.min(kifuEn, Math.floor(goukei*0.4)) - 2000) : 0;
 
   const kisoT = tableLookup(PARAMS.基礎控除, goukei).額;
   const haiT = calcHaigusha(hai, goukei, false);
   const fuyoT = calcFuyou(dependents, false);
   const seimeiT = calcSeimei(premiums, false);
   const jishinT = Math.min(jishinEn, PARAMS.地震保険料控除.所得税上限);
-  const koujoT = kisoT + shakaiHoken + haiT.額 + fuyoT + idecoEn + seimeiT + jishinT + sonotaEn;
+  const koujoT = kisoT + shakaiHoken + haiT.額 + fuyoT + idecoEn + seimeiT + jishinT + sonotaEn + iryoEn + kifuT;
   const kazeiT = Math.max(0, chopSen(goukei - koujoT));
   const honzei = calcShotokuzei(kazeiT);
   const loanEn = manToEn(koujo.jutakuLoanMan);
@@ -890,16 +922,32 @@ function calcAll(input){
   const fuyoJ = calcFuyou(dependents, true);
   const seimeiJ = calcSeimei(premiums, true);
   const jishinJ = Math.min(Math.round(jishinEn * PARAMS.地震保険料控除.住民税率), PARAMS.地震保険料控除.住民税上限);
-  const koujoJ = kisoJ + shakaiHoken + haiJ.額 + fuyoJ + idecoEn + seimeiJ + jishinJ + sonotaEn;
+  const koujoJ = kisoJ + shakaiHoken + haiJ.額 + fuyoJ + idecoEn + seimeiJ + jishinJ + sonotaEn + iryoEn;
   const kazeiJ = Math.max(0, chopSen(goukei - koujoJ));
-  let shotokuwari = 0, loanJ = 0, chosei = 0;
+  let shotokuwari = 0, loanJ = 0, chosei = 0, kifuKihon = 0, kifuTokurei = 0, kifuShinkoku = 0, kifuLimit = 0;
   if(!shotokuwariHikazei){
     shotokuwari = Math.round(kazeiJ * PARAMS.住民税.税率);
     chosei = Math.min(shotokuwari, calcChoseiKoujo(kazeiJ, goukei, hai, haiJ, dependents));
     shotokuwari -= chosei;
     const L = PARAMS.住宅ローン控除_住民税[koujo.jutakuKikan] || PARAMS.住宅ローン控除_住民税.r4;
     loanJ = Math.min(shotokuwari, Math.max(0, loanEn - loanT), Math.min(Math.floor(kazeiT*L.率), L.上限));
+    const wariA = shotokuwari; // 調整控除後の所得割（ふるさと納税の特例分の上限のもと）
     shotokuwari -= loanJ;
+    // ふるさと納税（確定申告をした場合）：基本分10%＋特例分（90%−所得税率×1.021、所得割の20%まで）
+    const rb = kazeiJ - jintekiSa(goukei, haiJ, dependents);
+    const mr = rb < 0 ? 0 : tableLookup(PARAMS.所得税速算表, rb).税率 * (1 + PARAMS.復興税率);
+    kifuLimit = Math.floor(wariA * 0.2 / (0.9 - mr)) + 2000;
+    if(kifuEn > 2000){
+      const t = Math.max(0, Math.min(kifuEn, Math.floor(goukei*0.3)) - 2000);
+      kifuKihon = Math.floor(t * 0.1);
+      kifuTokurei = Math.min(Math.floor(t * (0.9 - mr)), Math.floor(wariA * 0.2));
+      // ワンストップ特例：所得税で引かない分を、住民税の申告特例控除として引く
+      if(onestop && 0.9 - mr > 0) kifuShinkoku = Math.floor(kifuTokurei * mr / (0.9 - mr));
+      const want = kifuKihon + kifuTokurei + kifuShinkoku;
+      const use = Math.min(shotokuwari, want);
+      if(use < want){ const r = use / (want || 1); kifuKihon = Math.floor(kifuKihon*r); kifuShinkoku = Math.floor(kifuShinkoku*r); kifuTokurei = use - kifuKihon - kifuShinkoku; }
+      shotokuwari -= kifuKihon + kifuTokurei + kifuShinkoku;
+    }
   }
   const kintou = kintouHikazei ? 0 : PARAMS.住民税.均等割;
   const juminzei = Math.floor(shotokuwari/100)*100 + kintou;
@@ -912,9 +960,14 @@ function calcAll(input){
 
   const hikazeiNenkinEn = nenkin.has ? manToEn(nenkin.hikazeiMan) : 0; // 遺族・障害年金（非課税）
   const gakumen = kyuyoEn + jigyoEn + aoiroEn + zasshoEn + nenkinEn + hikazeiNenkinEn;
-  const tedori = gakumen - shakaiHoken - shotokuzei - juminzei - jigyozei;
+  const tedori = gakumen - shakaiHoken - shotokuzei - juminzei - jigyozei - kifuEn; // ふるさと納税の寄附額は支出として差し引く
 
   const warns = [];
+  if(kifuEn > 0){
+    notes.push('ふるさと納税は、上限内なら税金が「寄附額 − 2,000円」減るとして計算しています（ワンストップ特例の場合。確定申告では数千円ずれることがあります）。');
+    if(!shotokuwariHikazei && kifuEn > kifuLimit) warns.push(`ふるさと納税の寄附額が上限の目安（約${Math.floor(kifuLimit/1000)*1000 > 0 ? (Math.floor(kifuLimit/1000)*1000).toLocaleString() : 0}円）を超えています。超えた分は税金から戻らず、自己負担が2,000円より大きくなります。`);
+    if(shotokuwariHikazei) warns.push('住民税の所得割がかからないため、ふるさと納税による住民税の控除はありません。');
+  }
   if(zaishoku && teishiEn > 0) warns.push(`在職老齢年金：老齢厚生年金が年 約${Math.round(teishiEn/10000)}万円 支給停止になる見込みです（報酬比例部分の月額 ＋ 標準報酬月額など が65万円を超えるため）。${zaishoku.zengaku ? '全額停止のため、加給年金がある場合はそれも止まります。' : ''}`);
   // 扶養の判定は本人が被用者保険（社保・任意継続等）の場合のみ意味がある
   if(haigusha && haigusha.age < 75 && !isKouki && shahokenType !== 'kokuho'){
@@ -939,18 +992,18 @@ function calcAll(input){
     所得税: enToMan(shotokuzei), 住民税: enToMan(juminzei), 事業税: enToMan(jigyozei),
     課税所得_所得税: enToMan(kazeiT), 課税所得_住民税: enToMan(kazeiJ),
     住宅ローン控除_所得税: enToMan(loanT), 住宅ローン控除_住民税: enToMan(loanJ),
-    手取り: enToMan(tedori), 手取り月額: enToMan(tedori/12),
+    手取り: enToMan(tedori), 手取り月額: enToMan(tedori/12), 寄附: enToMan(kifuEn),
     警告: warns, 注記: notes,
     _en: { tedori, shotokuzei, juminzei, shakaiHoken, kazeiT, kazeiJ, goukei, shaho, jigyozei, chosei },
     _steps: {
       kyuyoEn, kyuyoKoujoEn, nenkinEn, nenkinGrossEn, teishiEn, zaishoku, nenkinKoujoEn, hikazeiNenkinEn, jigyoEn, aoiroEn, zasshoEn, choseiKoujo, goukei, gakumen,
       shahoBasis, shakaiHoken,
-      koujoT: { 基礎控除:kisoT, 社会保険料控除:shakaiHoken, '配偶者（特別）控除':haiT.額, 扶養控除:fuyoT, 'iDeCo・小規模共済':idecoEn, 生命保険料控除:seimeiT, 地震保険料控除:jishinT, その他の控除:sonotaEn },
-      koujoJ: { 基礎控除:kisoJ, 社会保険料控除:shakaiHoken, '配偶者（特別）控除':haiJ.額, 扶養控除:fuyoJ, 'iDeCo・小規模共済':idecoEn, 生命保険料控除:seimeiJ, 地震保険料控除:jishinJ, その他の控除:sonotaEn },
+      koujoT: { 基礎控除:kisoT, 社会保険料控除:shakaiHoken, '配偶者（特別）控除':haiT.額, 扶養控除:fuyoT, 'iDeCo・小規模共済':idecoEn, 生命保険料控除:seimeiT, 地震保険料控除:jishinT, 医療費控除:iryoEn, 寄附金控除:kifuT, その他の控除:sonotaEn },
+      koujoJ: { 基礎控除:kisoJ, 社会保険料控除:shakaiHoken, '配偶者（特別）控除':haiJ.額, 扶養控除:fuyoJ, 'iDeCo・小規模共済':idecoEn, 生命保険料控除:seimeiJ, 地震保険料控除:jishinJ, 医療費控除:iryoEn, その他の控除:sonotaEn },
       koujoTsum: koujoT, koujoJsum: koujoJ, kazeiT, honzei, loanT, kijunZei, shotokuzei,
       rate: tableLookup(PARAMS.所得税速算表, kazeiT),
       kazeiJ, w0: shotokuwariHikazei ? 0 : Math.round(kazeiJ * PARAMS.住民税.税率), chosei, loanJ, kintou, juminzei, wariHi: shotokuwariHikazei,
-      jigyozei, jigyozeiRitsu: jigyo.has ? jigyo.zeiritsu : 0, tedori,
+      jigyozei, jigyozeiRitsu: jigyo.has ? jigyo.zeiritsu : 0, tedori, kifuEn, kifuKihon, kifuTokurei, kifuShinkoku, kifuLimit,
     },
   };
 }
@@ -963,7 +1016,7 @@ const activeOf = toggle => toggle.querySelector('.active').dataset.v;
 const num = id => Math.max(0, parseFloat($(id).value)||0);
 // 金額欄は円で入力し、計算の中では万円で扱う
 const numY = id => num(id) / 10000;
-const YEN_IDS = ['sonotaGetsugaku','haigushaNenshu','haigushaNenkin','haigushaSonota','haigushaGoukei','nenshu','shoyo','jigyoShotoku','zasshoShotoku','nenkinGaku','hoshuHirei','hikazeiNenkin','ideco','seimeiIppan','seimeiIppanKyu','seimeiKaigo','seimeiNenkin','seimeiNenkinKyu','jishin','sonotaKoujo','jutakuLoan'];
+const YEN_IDS = ['iryo','furusatoKifu','haigushaNenshu','haigushaNenkin','haigushaSonota','haigushaGoukei','nenshu','shoyo','jigyoShotoku','zasshoShotoku','nenkinGaku','hoshuHirei','hikazeiNenkin','ideco','seimeiIppan','seimeiIppanKyu','seimeiKaigo','seimeiNenkin','seimeiNenkinKyu','jishin','sonotaKoujo','jutakuLoan'];
 function manReadText(v){
   const n = parseFloat(v); if(!(n>0)) return '';
   const m = n/10000;
@@ -1108,11 +1161,11 @@ function readInputs(){
     age: parseInt($('age').value)||0,
     shahokenType: activeOf(shahokenToggle),
     kenpoRitsu: num('kenpoRitsu')/100,
-    sonota: { getsugakuMan: numY('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
+    sonota: { getsugakuMan: num('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
     haigusha: hasHaigusha ? { nenshuMan: numY('haigushaNenshu'), nenkinMan: numY('haigushaNenkin'), sonotaMan: numY('haigushaSonota'), goukeiMan: $('haigushaGoukei').value.trim()==='' ? null : numY('haigushaGoukei'), age: parseInt($('haigushaAge').value)||0 } : null,
     koujo: {
       idecoMan: numY('ideco'), seimeiIppanMan: numY('seimeiIppan'), seimeiKaigoMan: numY('seimeiKaigo'), seimeiNenkinMan: numY('seimeiNenkin'), seimeiIppanKyuMan: numY('seimeiIppanKyu'), seimeiNenkinKyuMan: numY('seimeiNenkinKyu'),
-      jishinMan: numY('jishin'), sonotaMan: numY('sonotaKoujo'), jutakuLoanMan: numY('jutakuLoan'), jutakuKikan: $('jutakuKikan').value,
+      jishinMan: numY('jishin'), sonotaMan: numY('sonotaKoujo'), iryoMan: numY('iryo'), furusatoMan: numY('furusatoKifu'), jutakuLoanMan: numY('jutakuLoan'), jutakuKikan: $('jutakuKikan').value,
     },
     otherIncome: $('otherIncome').checked,
     kodomo, oya,
@@ -1174,16 +1227,16 @@ function stepsHTML(inp, r){
   const ln4 = t.wariHi
     ? [L('所得割', '非課税'), L('均等割', `${y(t.kintou)}`), L('住民税', `<b>${y(t.juminzei)}円</b>`)]
     : [L('課税所得', `合計所得 ${y(t.goukei)} − 所得控除 ${y(t.koujoJsum)} ＝ ${y(t.kazeiJ)}`),
-       L('所得割', `${y(t.kazeiJ)} × 10% ＝ ${y(t.w0)}${t.chosei ? ` − 調整控除 ${y(t.chosei)}` : ''}${t.loanJ ? ` − 住宅ローン控除 ${y(t.loanJ)}` : ''}`),
+       L('所得割', `${y(t.kazeiJ)} × 10% ＝ ${y(t.w0)}${t.chosei ? ` − 調整控除 ${y(t.chosei)}` : ''}${t.loanJ ? ` − 住宅ローン控除 ${y(t.loanJ)}` : ''}${t.kifuKihon+t.kifuTokurei+t.kifuShinkoku ? ` − ふるさと納税 ${y(t.kifuKihon+t.kifuTokurei+t.kifuShinkoku)}` : ''}`),
        L('均等割', `＋ ${y(t.kintou)}`),
        L('住民税', `<b>${y(t.juminzei)}円</b>`)];
-  h += st(++no, '住民税', ln4, `住民税の所得控除は所得税より小さめ（基礎控除43万円など）：${list(t.koujoJ)}<br>税率は一律10%。所得割は100円未満切り捨て`);
+  h += st(++no, '住民税', ln4, `住民税の所得控除は所得税より小さめ（基礎控除43万円など）：${list(t.koujoJ)}<br>税率は一律10%。所得割は100円未満切り捨て${t.kifuEn ? `<br>ふるさと納税は住民税では税額から直接引きます：基本分 ${y(t.kifuKihon)}＋特例分 ${y(t.kifuTokurei)}${t.kifuShinkoku ? `＋申告特例分 ${y(t.kifuShinkoku)}` : ''}（上限の目安 約${y(Math.floor(t.kifuLimit/1000)*1000)}円）` : ''}`);
   // 5 事業税
   if(t.jigyozei) h += st(++no, '個人事業税', [L('事業税', `（事業所得 ${y(t.jigyoEn)}${t.aoiroEn ? ` ＋ 青色申告特別控除 ${y(t.aoiroEn)}` : ''} − 事業主控除 2,900,000）× ${t.jigyozeiRitsu}% ＝ <b>${y(t.jigyozei)}円</b>`)]);
   // 6 手取り
   h += st(++no, '手取り', [
     L('額面', `${y(t.gakumen)}`),
-    L('差し引く', `社会保険料 ${y(t.shakaiHoken)} ＋ 所得税 ${y(t.shotokuzei)} ＋ 住民税 ${y(t.juminzei)}${t.jigyozei ? ` ＋ 事業税 ${y(t.jigyozei)}` : ''}`),
+    L('差し引く', `社会保険料 ${y(t.shakaiHoken)} ＋ 所得税 ${y(t.shotokuzei)} ＋ 住民税 ${y(t.juminzei)}${t.jigyozei ? ` ＋ 事業税 ${y(t.jigyozei)}` : ''}${t.kifuEn ? ` ＋ ふるさと納税の寄附 ${y(t.kifuEn)}` : ''}`),
     L('手取り', `<b>${y(t.tedori)}円</b>`),
   ], `額面は、給与・年金は収入、事業・雑は所得金額の合計${t.aoiroEn ? `。事業は青色申告特別控除 ${y(t.aoiroEn)} を足し戻した額（＝売上 − 経費）` : ''}${t.hikazeiNenkinEn ? `。非課税の年金 ${y(t.hikazeiNenkinEn)} を含む（税・保険料はかからない）` : ''}`);
   return h;
@@ -1213,6 +1266,7 @@ function renderScreen(inp, r){
       <div class="brow"><span>所得税（復興特別所得税を含む）</span><span class="bval">− ${fmt(r.所得税)} 万円</span></div>
       <div class="brow"><span>住民税</span><span class="bval">− ${fmt(r.住民税)} 万円</span></div>
       ${r.事業税>0 ? `<div class="brow"><span>個人事業税</span><span class="bval">− ${fmt(r.事業税)} 万円</span></div>` : ''}
+      ${r.寄附>0 ? `<div class="brow"><span>ふるさと納税の寄附（税金が減った分は上の税額に反映済み）</span><span class="bval">− ${fmt(r.寄附)} 万円</span></div>` : ''}
     </div>
     ${allWarns(inp, r).map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join('')}
     ${r.注記.map(n=>`<div class="info">${esc(n)}</div>`).join('')}
@@ -1262,6 +1316,8 @@ function buildReport(inp, r){
   const seimei = [['新生命',k.seimeiIppanMan],['旧生命',k.seimeiIppanKyuMan],['介護医療',k.seimeiKaigoMan],['新個人年金',k.seimeiNenkinMan],['旧個人年金',k.seimeiNenkinKyuMan]].filter(([,v])=>v>0);
   if(seimei.length) cond.push(['生命保険料（年間）', seimei.map(([n,v])=>`${n} ${fmt(v)}万円`).join('、')]);
   if(k.jishinMan>0) cond.push(['地震保険料（年間）', `${fmt(k.jishinMan)}万円`]);
+  if(k.iryoMan>0) cond.push(['医療費控除', `${fmt(k.iryoMan)}万円`]);
+  if(k.furusatoMan>0) cond.push(['ふるさと納税の寄附額', `${fmt(k.furusatoMan)}万円`]);
   if(k.sonotaMan>0) cond.push(['その他の所得控除', `${fmt(k.sonotaMan)}万円`]);
   if(k.jutakuLoanMan>0) cond.push(['住宅ローン控除額', `${fmt(k.jutakuLoanMan)}万円（入居：${({r4:'令和4年以降',h26:'平成26年4月〜令和3年',h21:'平成21年〜平成26年3月'})[k.jutakuKikan]}）`]);
   const condRows = cond.map(([a,b])=> `<tr><td class="k">${a}</td><td>${esc(b)}</td></tr>`).join('');
@@ -1315,6 +1371,7 @@ function buildReport(inp, r){
         <tr><td class="k">所得税（復興特別所得税を含む）</td><td class="n">− ${fmt(r.所得税)} 万円</td></tr>
         <tr><td class="k">住民税</td><td class="n">− ${fmt(r.住民税)} 万円</td></tr>
         ${r.事業税>0 ? `<tr><td class="k">個人事業税</td><td class="n">− ${fmt(r.事業税)} 万円</td></tr>` : ''}
+        ${r.寄附>0 ? `<tr><td class="k">ふるさと納税の寄附（減税分は税額に反映済み）</td><td class="n">− ${fmt(r.寄附)} 万円</td></tr>` : ''}
         <tr class="total"><td>年間手取り収入（概算）</td><td class="n">${fmt(r.手取り)} 万円</td></tr>
       </table>
       <div style="font-size:9px;color:#8B8F86;margin-top:3px;">※給与・年金は収入（額面）、事業・雑は所得金額の合計を額面合計とし、社会保険料・税を差し引いて手取りを算出しています。給与所得控除・公的年金等控除は税金の計算にだけ使い、手取りからは引いていません。</div>
@@ -1417,7 +1474,7 @@ function snapshot(){
   const toggles = {};
   TOGGLES.forEach(id => toggles[id] = activeOf($(id)));
   const deps = list => [...list.children].map(el=>({ age: el.querySelector('.dep-age').value, doukyo: el.querySelector('.dep-doukyo').value }));
-  return { fields, toggles, kodomo: deps(kodomoList), oya: deps(oyaList), unit: 'yen', savedAt: Date.now() };
+  return { fields, toggles, kodomo: deps(kodomoList), oya: deps(oyaList), unit: 'yen2', savedAt: Date.now() };
 }
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(snapshot())); }catch(e){}
@@ -1427,7 +1484,9 @@ function restoreState(){
   try{ st = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); }catch(e){}
   if(!st) return false;
   // 金額欄が万円だった頃の保存データは円に直す
-  if(st.unit !== 'yen' && st.fields){
+  // 'yen'（10/7午前の版）は標準報酬月額だけ円だったので万円に戻す
+  if(st.unit === 'yen' && st.fields && st.fields.sonotaGetsugaku){ const v = parseFloat(st.fields.sonotaGetsugaku); if(v > 10000) st.fields.sonotaGetsugaku = String(v/10000); }
+  if(st.unit !== 'yen' && st.unit !== 'yen2' && st.fields){
     YEN_IDS.forEach(id=>{ const v = st.fields[id]; if(v!=null && String(v).trim()!=='' && !isNaN(parseFloat(v))) st.fields[id] = String(Math.round(parseFloat(v)*10000)); });
   }
   // 入力欄・チェックボックス（先に戻し、トグルは後で上書き）
