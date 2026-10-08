@@ -57,6 +57,8 @@
   .toggle{display:flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;}
   .toggle button{border:none;background:#FCFCFA;color:var(--ink-soft);font-family:'Noto Sans JP',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;}
   .toggle button.active{background:var(--ink);color:#fff;}
+  .hint b, .note-box b{color:var(--ink);font-weight:700;}
+  .imp{color:var(--accent);font-weight:600;}
   .row.stack{flex-wrap:wrap;}
   .row.stack > label{flex:1 1 100%;}
   .row.stack .toggle{flex:1 1 100%;}
@@ -111,7 +113,7 @@
 
   /* ===== PDF用レポート（画面外。html2pdfには中の#reportを渡す） ===== */
   #reportHost{position:fixed;left:-10000px;top:0;}
-  #report{width:720px;background:#fff;color:#16233F;font-family:'Noto Sans JP',sans-serif;padding:8px 4px;line-height:1.55;}
+  #report{width:690px;box-sizing:border-box;background:#fff;color:#16233F;font-family:'Noto Sans JP',sans-serif;padding:8px 4px;line-height:1.55;}
   #report .rp-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #16233F;padding-bottom:10px;}
   #report .rp-eyebrow{font-size:10px;letter-spacing:.18em;color:#B23A2E;font-weight:700;}
   #report .rp-title{font-family:'Zen Old Mincho',serif;font-size:24px;font-weight:700;margin:2px 0 0;}
@@ -174,7 +176,7 @@
       <div class="panel">
         <p class="panel-title">基本情報</p>
         <div class="row">
-          <label for="age">年齢<span class="hint">その年の12月31日時点の年齢</span></label>
+          <label for="age">年齢<span class="hint"><span class="imp">その年の12月31日時点</span>の年齢</span></label>
           <div class="field"><select id="age" class="age-select" data-min="15" data-max="100" data-default="40"></select><span class="unit">歳</span></div>
         </div>
         <div class="row">
@@ -187,7 +189,7 @@
         </div>
         <div id="shahoRows">
           <div class="row">
-            <label for="kenpoRitsu">健康保険料率（労使合計）<span class="hint">初期値は協会けんぽ兵庫支部（令和8年度）。組合健保の方は給与明細・組合の案内の料率に書き換え（介護・子ども支援金分は含めない）</span></label>
+            <label for="kenpoRitsu">健康保険料率（労使合計）<span class="hint">初期値は協会けんぽ兵庫支部（令和8年度）。<span class="imp">組合健保の方は給与明細・組合の案内の料率に書き換え</span>（<span class="imp">介護・子ども支援金分は含めない</span>）</span></label>
             <div class="field"><input type="number" id="kenpoRitsu" value="10.12" min="0" step="any"><span class="unit">%</span></div>
           </div>
         </div>
@@ -197,7 +199,7 @@
             <div class="field"><input type="number" id="sonotaGetsugaku" value="28" min="0" step="any"><span class="unit">万円</span></div>
           </div>
           <div class="row">
-            <label for="sonotaRitsu">健康保険料率<span class="hint">通知書の料率（全額自己負担。介護・子ども支援金分は含めない）</span></label>
+            <label for="sonotaRitsu">健康保険料率<span class="hint">通知書の料率（全額自己負担。<span class="imp">介護・子ども支援金分は含めない</span>）</span></label>
             <div class="field"><input type="number" id="sonotaRitsu" value="10.0" min="0" step="any"><span class="unit">%</span></div>
           </div>
         </div>
@@ -206,7 +208,7 @@
       <div class="panel">
         <p class="panel-title">配偶者</p>
         <div class="row stack">
-          <label>配偶者<span class="hint">配偶者の年収（給与だけの場合）で選んでください。所得なら62万円以下が「136万円以下」です。社会保険の扶養（130万円）とは基準が違います</span></label>
+          <label>配偶者<span class="hint">配偶者の年収（給与だけの場合）で選んでください。<b>所得なら62万円以下</b>が「136万円以下」です。<span class="imp">社会保険の扶養（130万円）とは基準が違います</span></span></label>
           <div class="toggle" id="haigushaToggle">
             <button type="button" data-v="none" class="active">なし</button>
             <button type="button" data-v="fuyo">年収136万円以下</button>
@@ -224,7 +226,7 @@
             <div class="field yen"><input type="number" id="haigushaNenshu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaNenshu"></span></div>
           </div>
           <div class="row">
-            <label for="haigushaNenkin">配偶者の公的年金収入<span class="hint">年金の年額（控除前）。遺族・障害年金は非課税なので入れない</span></label>
+            <label for="haigushaNenkin">配偶者の公的年金収入<span class="hint">年金の年額（控除前）。<span class="imp">遺族・障害年金は非課税なので入れない</span></span></label>
             <div class="field yen"><input type="number" id="haigushaNenkin" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaNenkin"></span></div>
           </div>
           <div class="row">
@@ -232,7 +234,7 @@
             <div class="field yen"><input type="number" id="haigushaSonota" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaSonota"></span></div>
           </div>
           <div class="row row-sub">
-            <label for="haigushaGoukei">（わかる場合）配偶者の合計所得金額<span class="hint">本人の確定申告書(57)「配偶者の合計所得金額」、または配偶者の申告書⑫。入れると上の収入欄より優先します</span></label>
+            <label for="haigushaGoukei">（わかる場合）配偶者の合計所得金額<span class="hint">本人の確定申告書(57)「配偶者の合計所得金額」、または配偶者の申告書⑫。<span class="imp">入れると上の収入欄より優先します</span></span></label>
             <div class="field yen"><input type="number" id="haigushaGoukei" value="" min="0" placeholder="空欄可"><span class="unit">円</span><span class="man-read" data-for="haigushaGoukei"></span></div>
           </div>
           </div>
@@ -266,7 +268,7 @@
           <button type="button" class="add-btn" id="addOya">＋ 扶養家族を追加</button>
         </div>
 
-        <div class="note-box">※扶養家族は所得要件（合計所得62万円以下）を満たしている前提で計算します。</div>
+        <div class="note-box">※扶養家族は所得要件（<span class="imp">合計所得62万円以下</span>）を満たしている前提で計算します。</div>
         <div class="checkline">
           <input type="checkbox" id="otherIncome" style="margin-top:3px;">
           <label for="otherIncome">不動産・配当・譲渡などの他の所得がある（この診断には含まれません）</label>
@@ -284,7 +286,7 @@
           <div class="source-body open" id="src-kyuyo">
             <div class="source-inner">
               <div class="row">
-                <label for="nenshu">額面年収<span class="hint">源泉徴収票の「支払金額」欄。2ヶ所以上お勤めの場合は合計額</span></label>
+                <label for="nenshu">額面年収<span class="hint">源泉徴収票の「支払金額」欄。<span class="imp">2ヶ所以上お勤めの場合は合計額</span></span></label>
                 <div class="field yen"><input type="number" id="nenshu" value="5000000" min="0"><span class="unit">円</span><span class="man-read" data-for="nenshu"></span></div>
               </div>
               <div class="row">
@@ -303,7 +305,7 @@
           <div class="source-body" id="src-jigyo">
             <div class="source-inner">
               <div class="row">
-                <label for="jigyoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の①（売上 − 経費 − 青色申告特別控除）</span></label>
+                <label for="jigyoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の①（<span class="imp">売上 − 経費 − 青色申告特別控除</span>）</span></label>
                 <div class="field yen"><input type="number" id="jigyoShotoku" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="jigyoShotoku"></span></div>
               </div>
               <div class="row">
@@ -339,7 +341,7 @@
           <div class="source-body" id="src-zassho">
             <div class="source-inner">
               <div class="row">
-                <label for="zasshoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の「雑：業務」欄（経費差引後・控除前の金額）</span></label>
+                <label for="zasshoShotoku">所得金額<span class="hint">確定申告書第一表「所得金額等」の「雑：業務」欄（<span class="imp">経費差引後</span>・控除前の金額）</span></label>
                 <div class="field yen"><input type="number" id="zasshoShotoku" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="zasshoShotoku"></span></div>
               </div>
               <div class="note-box">※事業所得と同様の扱いですが、赤字が出た場合に他の所得と相殺（損益通算）できない点が異なります（本ツールは黒字前提のため計算への影響はありません）。</div>
@@ -363,11 +365,11 @@
               </div>
               <div id="nenkinGoukeiRows">
                 <div class="row">
-                  <label for="nenkinGaku">課税される年金の年額<span class="hint">老齢年金・企業年金などの合計（天引き前）を円で。「公的年金等の源泉徴収票」の支払金額を全部足した額、確定申告書なら㋕</span></label>
+                  <label for="nenkinGaku">課税される年金の年額<span class="hint">老齢年金・企業年金などの合計（<span class="imp">天引き前</span>）を円で。「公的年金等の源泉徴収票」の支払金額を全部足した額、確定申告書なら㋕</span></label>
                   <div class="field yen"><input type="number" id="nenkinGaku" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="nenkinGaku"></span></div>
                 </div>
                 <div class="row row-sub">
-                  <label for="hoshuHirei">うち老齢厚生年金（報酬比例部分）<span class="hint">在職老齢年金の判定用。給与があり会社の社会保険に入る60歳以上の人だけ。共済の厚生年金も含む（加給年金・経過的加算は除く）</span></label>
+                  <label for="hoshuHirei">うち老齢厚生年金（報酬比例部分）<span class="hint"><b>在職老齢年金の判定用</b>。<span class="imp">給与があり会社の社会保険に入る60歳以上の人だけ</span>。共済の厚生年金も含む（加給年金・経過的加算は除く）</span></label>
                   <div class="field yen"><input type="number" id="hoshuHirei" value="" min="0" placeholder="空欄可"><span class="unit">円</span><span class="man-read" data-for="hoshuHirei"></span></div>
                 </div>
                 <div class="row">
@@ -385,7 +387,7 @@
                 <div class="row"><label for="nkHikazei">非課税の年金（遺族・障害）<span class="hint">税金・保険料の計算には含めず、手取りにだけ足します</span></label><div class="field"><input type="number" id="nkHikazei" value="0" min="0"><span class="unit">円</span></div></div>
                 <div class="sum-line" style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);padding:8px 10px;margin-top:8px;background:var(--paper);border-radius:3px;"><span>課税される年金の合計（うち報酬比例部分）</span><b id="nkSumView" style="font-family:'JetBrains Mono',monospace;color:var(--ink);">0 円</b></div>
               </div>
-              <div class="note-box">※入れるのは天引き前の「年金支払額」です。振込通知書の「控除後振込額」は、所得税・住民税・介護保険料などが引かれた後の額なので使いません（このツールが計算する税・保険料と二重になるため）。</div>
+              <div class="note-box">※入れるのは<span class="imp">天引き前の「年金支払額」</span>です。振込通知書の「控除後振込額」は、所得税・住民税・介護保険料などが引かれた後の額なので使いません（このツールが計算する税・保険料と二重になるため）。</div>
             </div>
           </div>
         </div>
@@ -427,20 +429,20 @@
 
         <p class="group-label">その他</p>
         <div class="row">
-          <label for="iryo">医療費の目安（年間の支払額）<span class="hint">病院・薬局などで1年に払う額の見込み（保険金などで補填される分は除く）。10万円（所得200万円未満は所得の5%）を超えた分を医療費控除として自動計算します（上限200万円）</span></label>
+          <label for="iryo">医療費の目安（年間の支払額）<span class="hint">病院・薬局などで1年に払う額の見込み（<span class="imp">保険金などで補填される分は除く</span>）。10万円（所得200万円未満は所得の5%）を超えた分を医療費控除として自動計算します（上限200万円）</span></label>
           <div class="field yen"><input type="number" id="iryo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="iryo"></span></div>
         </div>
         <div class="row">
-          <label for="furusatoKifu">ふるさと納税額の目安<span class="hint">都道府県・市区町村への寄附の合計。確定申告書から写すなら ㉙ 寄附金控除 ＋ 2,000円。減る税金を反映し、寄附した額は手取りから差し引きます（上限内なら差し引き2,000円の負担）</span></label>
+          <label for="furusatoKifu">ふるさと納税額の目安<span class="hint">都道府県・市区町村への寄附の合計。確定申告書から写すなら <span class="imp">㉙ 寄附金控除 ＋ 2,000円</span>。減る税金を反映し、寄附した額は手取りから差し引きます（上限内なら差し引き2,000円の負担）</span></label>
           <div class="field yen"><input type="number" id="furusatoKifu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="furusatoKifu"></span></div>
         </div>
         <div class="row">
-          <label for="sonotaKoujo">その他の所得控除<span class="hint">家族分の国民年金・国保、国民年金基金など、所得税と住民税で同じ額になる控除だけ。確定申告書の医療費控除（㉘）やセルフメディケーション税制の控除額をそのまま使う場合もここへ（上の医療費の目安は0に）。寡婦・ひとり親・障害者の控除、ふるさと納税以外の寄附は対象外</span></label>
+          <label for="sonotaKoujo">その他の所得控除<span class="hint">家族分の国民年金・国保、国民年金基金など、<span class="imp">所得税と住民税で同じ額になる控除だけ</span>。確定申告書の医療費控除（㉘）やセルフメディケーション税制の控除額をそのまま使う場合もここへ（<span class="imp">上の医療費の目安は0に</span>）。寡婦・ひとり親・障害者の控除、ふるさと納税以外の寄附は対象外</span></label>
           <div class="field yen"><input type="number" id="sonotaKoujo" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="sonotaKoujo"></span></div>
         </div>
         <div class="row">
-          <label for="jutakuLoan">住宅ローン控除額<span class="hint">年末調整・確定申告での控除額（年末残高×0.7%など）。所得税で引ききれない分は住民税から</span></label>
-          <div class="field yen"><input type="number" id="jutakuLoan" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="jutakuLoan"></span></div>
+          <label for="jutakuLoan">住宅ローン控除額<span class="hint">年末調整・確定申告での<span class="imp">控除額</span>（年末残高×0.7%など）。所得税で引ききれない分は住民税から</span></label>
+          <div class="field yen"><input type="number" id="jutakuLoan" value="" min="0" placeholder="空欄可"><span class="unit">円</span><span class="man-read" data-for="jutakuLoan"></span></div>
         </div>
         <div class="row">
           <label for="jutakuKikan">住宅ローンの入居時期<span class="hint">住民税から引ける上限が変わります</span></label>
@@ -1516,6 +1518,7 @@ function restoreState(){
   // 金額欄が万円だった頃の保存データは円に直す
   // 'yen'（10/7午前の版）は標準報酬月額だけ円だったので万円に戻す
   if(st.unit === 'yen' && st.fields && st.fields.sonotaGetsugaku){ const v = parseFloat(st.fields.sonotaGetsugaku); if(v > 10000) st.fields.sonotaGetsugaku = String(v/10000); }
+  if(st.fields && String(st.fields.jutakuLoan) === '0') st.fields.jutakuLoan = '';
   if(st.unit !== 'yen' && st.unit !== 'yen2' && st.fields){
     YEN_IDS.forEach(id=>{ const v = st.fields[id]; if(v!=null && String(v).trim()!=='' && !isNaN(parseFloat(v))) st.fields[id] = String(Math.round(parseFloat(v)*10000)); });
   }
