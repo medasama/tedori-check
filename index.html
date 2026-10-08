@@ -57,6 +57,10 @@
   .toggle{display:flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;}
   .toggle button{border:none;background:#FCFCFA;color:var(--ink-soft);font-family:'Noto Sans JP',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;}
   .toggle button.active{background:var(--ink);color:#fff;}
+  .row.stack{flex-wrap:wrap;}
+  .row.stack > label{flex:1 1 100%;}
+  .row.stack .toggle{flex:1 1 100%;}
+  .row.stack .toggle button{flex:1 1 0;white-space:nowrap;padding:8px 6px;}
   .note-box{margin-top:8px;font-size:11.5px;color:#8B8F86;line-height:1.6;background:var(--paper);border-radius:3px;padding:8px 10px;}
 
   .dep-list{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
@@ -201,11 +205,12 @@
 
       <div class="panel">
         <p class="panel-title">配偶者</p>
-        <div class="row">
-          <label>配偶者</label>
+        <div class="row stack">
+          <label>配偶者<span class="hint">配偶者の年収（給与だけの場合）で選んでください。所得なら62万円以下が「136万円以下」です。社会保険の扶養（130万円）とは基準が違います</span></label>
           <div class="toggle" id="haigushaToggle">
             <button type="button" data-v="none" class="active">なし</button>
-            <button type="button" data-v="yes">あり</button>
+            <button type="button" data-v="fuyo">年収136万円以下</button>
+            <button type="button" data-v="yes">それを超える</button>
           </div>
         </div>
         <div id="haigushaRows" style="display:none;">
@@ -213,6 +218,7 @@
             <label for="haigushaAge">配偶者の年齢<span class="hint">年金の控除額（65歳）・老人配偶者控除（70歳）の判定に使います</span></label>
             <div class="field"><select id="haigushaAge" class="age-select" data-min="15" data-max="100" data-default="40"></select><span class="unit">歳</span></div>
           </div>
+          <div id="haigushaIncomeRows">
           <div class="row">
             <label for="haigushaNenshu">配偶者の給与収入<span class="hint">額面。なければ0</span></label>
             <div class="field yen"><input type="number" id="haigushaNenshu" value="0" min="0"><span class="unit">円</span><span class="man-read" data-for="haigushaNenshu"></span></div>
@@ -229,6 +235,8 @@
             <label for="haigushaGoukei">（わかる場合）配偶者の合計所得金額<span class="hint">本人の確定申告書(57)「配偶者の合計所得金額」、または配偶者の申告書⑫。入れると上の収入欄より優先します</span></label>
             <div class="field yen"><input type="number" id="haigushaGoukei" value="" min="0" placeholder="空欄可"><span class="unit">円</span><span class="man-read" data-for="haigushaGoukei"></span></div>
           </div>
+          </div>
+          <p id="haigushaFuyoNote" class="note-box" style="display:none;">配偶者控除（38万円。配偶者が70歳以上なら48万円）として計算します。配偶者の年収の入力は不要です。</p>
         </div>
       </div>
 
@@ -1110,7 +1118,7 @@ setupToggle(oyaToggle, v=>{
 $('addOya').addEventListener('click', ()=> addDepRow(oyaList, 70));
 
 const haigushaToggle = $('haigushaToggle');
-setupToggle(haigushaToggle, v=>{ $('haigushaRows').style.display = v==='yes' ? 'block' : 'none'; });
+setupToggle(haigushaToggle, v=>{ $('haigushaRows').style.display = v==='none' ? 'none' : 'block'; $('haigushaIncomeRows').style.display = v==='yes' ? 'block' : 'none'; $('haigushaFuyoNote').style.display = v==='fuyo' ? 'block' : 'none'; });
 
 const shahokenToggle = $('shahokenToggle');
 function syncShahoRows(v){
@@ -1157,7 +1165,7 @@ function readNenkin(){
 
 // ===== 入力の読み取り =====
 function readInputs(){
-  const hasHaigusha = activeOf(haigushaToggle)==='yes';
+  const haiMode = activeOf(haigushaToggle), hasHaigusha = haiMode !== 'none';
   const kodomo = activeOf(kodomoToggle)==='yes' ? readDeps(kodomoList, 'kodomo') : [];
   const oya = activeOf(oyaToggle)==='yes' ? readDeps(oyaList, 'oya') : [];
   return {
@@ -1169,7 +1177,8 @@ function readInputs(){
     shahokenType: activeOf(shahokenToggle),
     kenpoRitsu: num('kenpoRitsu')/100,
     sonota: { getsugakuMan: num('sonotaGetsugaku'), ritsu: num('sonotaRitsu') },
-    haigusha: hasHaigusha ? { nenshuMan: numY('haigushaNenshu'), nenkinMan: numY('haigushaNenkin'), sonotaMan: numY('haigushaSonota'), goukeiMan: $('haigushaGoukei').value.trim()==='' ? null : numY('haigushaGoukei'), age: parseInt($('haigushaAge').value)||0 } : null,
+    haigusha: haiMode==='fuyo' ? { nenshuMan:0, nenkinMan:0, sonotaMan:0, goukeiMan:0, fuyo:true, age: parseInt($('haigushaAge').value)||0 }
+      : hasHaigusha ? { nenshuMan: numY('haigushaNenshu'), nenkinMan: numY('haigushaNenkin'), sonotaMan: numY('haigushaSonota'), goukeiMan: $('haigushaGoukei').value.trim()==='' ? null : numY('haigushaGoukei'), age: parseInt($('haigushaAge').value)||0 } : null,
     koujo: {
       idecoMan: numY('ideco'), seimeiIppanMan: numY('seimeiIppan'), seimeiKaigoMan: numY('seimeiKaigo'), seimeiNenkinMan: numY('seimeiNenkin'), seimeiIppanKyuMan: numY('seimeiIppanKyu'), seimeiNenkinKyuMan: numY('seimeiNenkinKyu'),
       jishinMan: numY('jishin'), sonotaMan: numY('sonotaKoujo'), iryoMan: numY('iryo'), furusatoMan: numY('furusatoKifu'), jutakuLoanMan: numY('jutakuLoan'), jutakuKikan: $('jutakuKikan').value,
@@ -1316,7 +1325,7 @@ function buildReport(inp, r){
     if(h.nenkinMan>0) parts.push(`年金 ${fmt(h.nenkinMan)}万円`);
     if(h.sonotaMan>0) parts.push(`その他所得 ${fmt(h.sonotaMan)}万円`);
     if(h.goukeiMan!=null) parts.unshift(`合計所得 ${fmt(h.goukeiMan)}万円`);
-    cond.push(['配偶者', `あり（${h.age}歳・${parts.length ? parts.join('、') : '収入なし'}）`]);
+    cond.push(['配偶者', h.fuyo ? `あり（${h.age}歳・年収136万円以下＝配偶者控除）` : `あり（${h.age}歳・${parts.length ? parts.join('、') : '収入なし'}）`]);
   } else cond.push(['配偶者', 'なし']);
   cond.push(['子', inp.kodomo.length ? depText(inp.kodomo) : 'なし']);
   cond.push(['その他の扶養家族', inp.oya.length ? depText(inp.oya) : 'なし']);
