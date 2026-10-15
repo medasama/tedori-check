@@ -59,6 +59,7 @@
   .toggle button.active{background:var(--ink);color:#fff;}
   .hint b, .note-box b{color:var(--ink);font-weight:700;}
   .imp{color:var(--accent);font-weight:600;}
+  .stale-banner{margin:0 0 14px;padding:10px 12px;border-radius:3px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
   .row.stack{flex-wrap:wrap;}
   .row.stack > label{flex:1 1 100%;}
   .row.stack .toggle{flex:1 1 100%;}
@@ -470,6 +471,7 @@
     <div class="panel result-panel">
       <div class="stamp" id="stamp">診断済</div>
       <p class="panel-title">診断結果</p>
+      <div id="staleBanner" class="stale-banner" style="display:none;">⚠ 入力が変わりました。もう一度［診断する］を押してください</div>
       <div id="resultBody">
         <p class="placeholder">左の項目を入力して「診断する」を押してください</p>
       </div>
@@ -1434,6 +1436,7 @@ function runDiagnosis(){
     return null;
   }
   const r = calcAll(inp);
+  $('staleBanner').style.display = 'none';
   renderScreen(inp, r);
   buildReport(inp, r);
   $('pdfBtn').disabled = false; $('printBtn').disabled = false;
@@ -1450,6 +1453,12 @@ $('calcBtn').addEventListener('click', ()=>{
 });
 
 $('atena').addEventListener('input', ()=>{ if(!$('pdfBtn').disabled) runDiagnosis(); });
+// 診断後に入力が変わったら、結果が古いことを知らせる
+function markStale(){ if(!$('pdfBtn').disabled) $('staleBanner').style.display = 'block'; }
+$('inputColumn').addEventListener('input', markStale);
+$('inputColumn').addEventListener('change', markStale);
+$('inputColumn').addEventListener('click', e=>{ if(e.target.closest('.toggle button, .add-btn, .del')) markStale(); });
+$('staleBanner').addEventListener('click', ()=> $('calcBtn').click());
 
 function pdfFileName(){
   const d = new Date();
