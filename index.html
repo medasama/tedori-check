@@ -139,6 +139,34 @@
   #report .rp-note{margin-top:8px;font-size:8px;color:#8B8F86;line-height:1.55;}
   #report .rp-foot{margin-top:10px;padding-top:6px;border-top:1px solid #D9DCD3;font-size:10px;color:#8B8F86;display:flex;justify-content:space-between;}
   #report .avoid{page-break-inside:avoid;break-inside:avoid;}
+  #report .rp-hero{margin:16px 0 6px;padding:14px 20px;background:#EAF3EF;border-left:6px solid #2F6F5E;border-radius:4px;}
+  #report .rp-hero .hl{font-size:13px;color:#3C4A66;font-weight:600;}
+  #report .rp-hero .hv{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:700;color:#2F6F5E;line-height:1.15;}
+  #report .rp-hero .hv span{font-size:16px;font-weight:500;color:#3C4A66;margin-left:4px;}
+  #report .rp-hero .hm{font-size:14px;color:#16233F;margin-top:2px;}
+  #report .rp-bar{display:flex;height:22px;border-radius:4px;overflow:hidden;margin:6px 0 6px;}
+  #report .rp-legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:#3C4A66;}
+  #report .rp-legend .lg{display:flex;align-items:center;gap:5px;}
+  #report .rp-legend .dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  #report .rp-legend b{color:#16233F;font-family:'JetBrains Mono',monospace;}
+  #report .rp-legend .pc{color:#8B8F86;}
+  #report table.flow{font-size:13px;}
+  #report table.flow td{padding:5px 6px;}
+  #report table.flow tr.hd td{font-size:10.5px;color:#8B8F86;border-bottom:1px solid #D9DCD3;padding-top:0;}
+  #report table.flow tr.strong td{font-weight:600;}
+  #report table.flow tr.sub td{font-size:11.5px;color:#3C4A66;padding-left:22px;}
+  #report table.flow td.mo{width:18%;color:#3C4A66;}
+  #report table.flow td.n{width:18%;}
+  #report table.flow tr.total td{font-size:15px;color:#2F6F5E;}
+  #report .rp-small{font-size:9.5px;color:#8B8F86;margin-top:4px;line-height:1.5;}
+  #report .mcards{display:flex;gap:8px;}
+  #report .mcard{flex:1 1 0;border:1px solid #D9DCD3;border-radius:4px;padding:8px 10px;}
+  #report .mcard .mt{font-size:11.5px;font-weight:700;color:#16233F;margin-bottom:2px;}
+  #report .mcard .mb{font-size:11px;color:#3C4A66;line-height:1.55;}
+  #report table.cond{font-size:10.5px;}
+  #report table.cond td{padding:2px 4px;}
+  #report h3{font-size:13.5px;color:#16233F;}
+
 
   details.howto{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
   details.howto > summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--accent);list-style:none;}
@@ -757,8 +785,9 @@ function calcKokuho(goukei, hanteiShotoku, age){
   const w = keigenWari(hanteiShotoku);
   const keep = 1 - w/10;
   const part = (q)=> Math.min(santei*q.率 + (q.均等 + q.平等)*keep, q.上限);
-  const out = { '国保 医療分': part(p.医療), '国保 支援金分': part(p.支援), '国保 子ども分': part(p.子ども) };
+  const out = { '国保 医療分': part(p.医療), '国保 支援金分': part(p.支援) };
   if(age>=40 && age<65) out['国保 介護分'] = part(p.介護);
+  out['国保 子ども分'] = part(p.子ども);
   return { 内訳: out, 軽減: w };
 }
 function calcKouki(goukei, hanteiShotoku){
@@ -863,13 +892,13 @@ function calcAll(input){
       const kenpoBase = hjKenpo.額*12 + Math.min(hyojunShoyo, S.健保賞与年上限);
       const kounenBase = hjKounen.額*12 + Math.min(hyojunShoyo, S.厚年賞与1回上限*S.賞与回数想定);
       shahoBasis.push(`月給 約${Math.round(getsuEn).toLocaleString()}円 → 標準報酬月額 健康保険 ${hjKenpo.額.toLocaleString()}円（第${hjKenpo.等級}等級）／厚生年金 ${hjKounen.額.toLocaleString()}円（第${hjKounen.等級}等級）${hyojunShoyo ? `、賞与 ${hyojunShoyo.toLocaleString()}円` : ''}`);
-      shahoBasis.push(`健康保険・子ども支援金${is2go?'・介護保険':''}：（標準報酬月額 × 12 ＋ 賞与）× 料率 ÷ 2（会社と折半）`);
+      shahoBasis.push(`健康保険${is2go?'・介護保険':''}・子ども支援金：（標準報酬月額 × 12 ＋ 賞与）× 料率 ÷ 2（会社と折半）`);
       if(age < 70) shahoBasis.push(`厚生年金：（${hjKounen.額.toLocaleString()} × 12 ＋ 賞与）× 18.3% ÷ 2`);
       shahoBasis.push(`雇用保険：額面 ${kyuyoEn.toLocaleString()}円 × 0.5%`);
       if(!isKouki){
         shaho['健康保険'] = kenpoBase * kenpoRitsu / 2;
-        shaho['子ども・子育て支援金'] = kenpoBase * S.子ども支援金率 / 2;
         if(is2go) shaho['介護保険（第2号）'] = kenpoBase * S.介護率 / 2;
+        shaho['子ども・子育て支援金'] = kenpoBase * S.子ども支援金率 / 2;
       }
       if(age < 70) shaho['厚生年金'] = kounenBase * S.厚年率 / 2;
       else notes.push('70歳以上のため厚生年金保険料はかかりません。');
@@ -885,8 +914,8 @@ function calcAll(input){
     const g = manToEn(sonota.getsugakuMan);
     shahoBasis.push(`健康保険：標準報酬月額 ${g.toLocaleString()}円 × 料率 × 12か月（全額自己負担）`);
     shaho['健康保険'] = g * (sonota.ritsu/100) * 12;
-    shaho['子ども・子育て支援金'] = g * S.子ども支援金率 * 12;
     if(is2go) shaho['介護保険（第2号）'] = g * S.介護率 * 12;
+    shaho['子ども・子育て支援金'] = g * S.子ども支援金率 * 12;
   }
   if(isKouki){
     const k = calcKouki(goukei, hanteiShotoku);
@@ -1255,10 +1284,10 @@ function stepsHTML(inp, r){
   if(t.jigyozei) h += st(++no, '個人事業税', [L('事業税', `（事業所得 ${y(t.jigyoEn)}${t.aoiroEn ? ` ＋ 青色申告特別控除 ${y(t.aoiroEn)}` : ''} − 事業主控除 2,900,000）× ${t.jigyozeiRitsu}% ＝ <b>${y(t.jigyozei)}円</b>`)]);
   // 6 手取り
   h += st(++no, '手取り', [
-    L('額面', `${y(t.gakumen)}`),
+    L('収入', `${y(t.gakumen)}`),
     L('差し引く', `社会保険料 ${y(t.shakaiHoken)} ＋ 所得税 ${y(t.shotokuzei)} ＋ 住民税 ${y(t.juminzei)}${t.jigyozei ? ` ＋ 事業税 ${y(t.jigyozei)}` : ''}${t.kifuEn ? ` ＋ ふるさと納税の寄附 ${y(t.kifuEn)}` : ''}`),
     L('手取り', `<b>${y(t.tedori)}円</b>`),
-  ], `額面は、給与・年金は収入、事業・雑は所得金額の合計${t.aoiroEn ? `。事業は青色申告特別控除 ${y(t.aoiroEn)} を足し戻した額（＝売上 − 経費）` : ''}${t.hikazeiNenkinEn ? `。非課税の年金 ${y(t.hikazeiNenkinEn)} を含む（税・保険料はかからない）` : ''}`);
+  ], `収入は、給与は年収、年金は天引き前の受取額、事業・副業は売上から経費を引いた額の合計${t.aoiroEn ? `。事業は青色申告特別控除 ${y(t.aoiroEn)} を足し戻した額（＝売上 − 経費）` : ''}${t.hikazeiNenkinEn ? `。非課税の年金 ${y(t.hikazeiNenkinEn)} を含む（税・保険料はかからない）` : ''}`);
   return h;
 }
 function meyasuLines(r){
@@ -1285,11 +1314,11 @@ function renderScreen(inp, r){
     <div class="headline">
       <div class="label">年間手取り収入（概算）</div>
       <div class="value">${fmt(r.手取り)}<span>万円</span></div>
-      <div class="monthly">月あたり 約${fmt(r.手取り月額)}万円 ／ 額面合計 ${fmt(r.額面合計)}万円</div>
+      <div class="monthly">月あたり 約${fmt(r.手取り月額)}万円 ／ 収入（税金・保険料を引く前） ${fmt(r.額面合計)}万円</div>
     </div>
     <div class="breakdown">
       ${incomeRows}
-      ${incomeLines(inp, r).length > 1 ? `<div class="brow" style="font-weight:700;border-bottom:1px solid var(--line);"><span>額面合計</span><span class="bval">${fmt(r.額面合計)} 万円</span></div>` : ''}
+      ${incomeLines(inp, r).length > 1 ? `<div class="brow" style="font-weight:700;border-bottom:1px solid var(--line);"><span>収入（税金・保険料を引く前）</span><span class="bval">${fmt(r.額面合計)} 万円</span></div>` : ''}
       <div class="brow clickable" id="shahoRow">
         <span class="bkey"><span class="chevron">▶</span>社会保険料</span>
         <span class="bval">− ${fmt(r.社保合計)} 万円</span>
@@ -1353,22 +1382,31 @@ function buildReport(inp, r){
   if(k.furusatoMan>0) cond.push(['ふるさと納税額の目安', `${fmt(k.furusatoMan)}万円`]);
   if(k.sonotaMan>0) cond.push(['その他の所得控除', `${fmt(k.sonotaMan)}万円`]);
   if(k.jutakuLoanMan>0) cond.push(['住宅ローン控除額', `${fmt(k.jutakuLoanMan)}万円（入居：${({r4:'令和4年以降',h26:'平成26年4月〜令和3年',h21:'平成21年〜平成26年3月'})[k.jutakuKikan]}）`]);
-  const condRows = cond.map(([a,b])=> `<tr><td class="k">${a}</td><td>${esc(b)}</td></tr>`).join('');
 
-  const incomeRows = incomeLines(inp, r).map(([a,v])=>
-    `<tr class="sub"><td>${a}</td><td class="n">${typeof v==='string'?v:fmt(v)} 万円</td></tr>`).join('');
-  const shahoSub = Object.entries(r.社保内訳).map(([a,v])=>
-    `<tr class="sub"><td>${esc(a)}</td><td class="n">− ${fmt(v)} 万円</td></tr>`).join('');
-
-  const ref = [
-    ['合計所得金額', `${fmt(r.合計所得)} 万円`],
-    ['課税所得（所得税）', `${fmt(r.課税所得_所得税)} 万円`],
-    ['課税所得（住民税）', `${fmt(r.課税所得_住民税)} 万円`],
+  // ===== お客様向けレポート =====
+  const m12 = v => fmt(Math.round(v/12*10)/10);   // 万円の年額 → 月あたり（万円）
+  const gross = r.額面合計;
+  const pct = v => gross > 0 ? Math.round(v / gross * 100) : 0;
+  const segs = [
+    ['手取り', r.手取り, '#2F6F5E'],
+    ['社会保険料', r.社保合計, '#5B7DB1'],
+    ['所得税', r.所得税, '#C9A227'],
+    ['住民税', r.住民税, '#B23A2E'],
   ];
-  meyasuLines(r).forEach(x=>ref.push(x));
-  if(r.住宅ローン控除_所得税>0 || r.住宅ローン控除_住民税>0){
-    ref.push(['住宅ローン控除（所得税／住民税）', `${fmt(r.住宅ローン控除_所得税)} ／ ${fmt(r.住宅ローン控除_住民税)} 万円`]);
-  }
+  if(r.事業税>0) segs.push(['個人事業税', r.事業税, '#8C6BB1']);
+  if(r.寄附>0) segs.push(['ふるさと納税', r.寄附, '#9AA0A6']);
+  const bar = segs.filter(([,v])=>v>0).map(([k,v,c])=>`<div style="width:${Math.max(0.5, v/gross*100)}%;background:${c};"></div>`).join('');
+  const legend = segs.filter(([,v])=>v>0).map(([k,v,c])=>`<div class="lg"><span class="dot" style="background:${c}"></span>${k}<b>${fmt(v)}万円</b><span class="pc">${pct(v)}%</span></div>`).join('');
+
+  const row = (label, v, cls='', sign='') => `<tr class="${cls}"><td>${label}</td><td class="n">${sign}${fmt(v)}</td><td class="n mo">${sign}${m12(v)}</td></tr>`;
+  const incomeRows = incomeLines(inp, r).filter(([,v])=>typeof v!=='string').map(([a,v])=>row(a, v, 'sub')).join('');
+  const shahoSub = Object.entries(r.社保内訳).map(([a,v])=>row(esc(a), v, 'sub', '− ')).join('');
+  const stopNote = r.年金停止>0 ? `<div class="rp-small">※公的年金は、在職老齢年金で支給が止まる見込みの約${fmt(r.年金停止)}万円を引いた受取額です。</div>` : '';
+
+  const meyasu = meyasuLines(r).filter(([a])=>!a.includes('医療費')).map(([a,b])=>`<div class="mcard"><div class="mt">${a}</div><div class="mb">${esc(b)}</div></div>`).join('');
+  const condRows = cond.map(([a,b])=> `<tr><td class="k">${a}</td><td>${esc(b)}</td></tr>`).join('')
+    + `<tr><td class="k">合計所得金額／課税所得</td><td>${fmt(r.合計所得)}万円／所得税 ${fmt(r.課税所得_所得税)}万円・住民税 ${fmt(r.課税所得_住民税)}万円</td></tr>`
+    + ((r.住宅ローン控除_所得税>0 || r.住宅ローン控除_住民税>0) ? `<tr><td class="k">住宅ローン控除（所得税／住民税）</td><td>${fmt(r.住宅ローン控除_所得税)}万円／${fmt(r.住宅ローン控除_住民税)}万円</td></tr>` : '');
 
   $('report').innerHTML = `
     <div class="rp-top">
@@ -1382,41 +1420,47 @@ function buildReport(inp, r){
       </div>
     </div>
 
-    <div class="rp-headline">
-      <div>
-        <div class="l">年間手取り収入（概算）</div>
-        <div class="v">${fmt(r.手取り)}<span>万円</span></div>
-      </div>
-      <div class="m">月あたり 約${fmt(r.手取り月額)}万円<br>額面合計 ${fmt(r.額面合計)}万円</div>
+    <div class="rp-hero avoid">
+      <div class="hl">1年間の手取り（概算）</div>
+      <div class="hv">${fmt(r.手取り)}<span>万円</span></div>
+      <div class="hm">月あたり 約${fmt(r.手取り月額)}万円</div>
     </div>
 
     <div class="avoid">
-      <h3>入力条件</h3>
-      <table>${condRows}</table>
+      <h3>内訳</h3>
+      <div class="rp-bar">${bar}</div>
+      <div class="rp-legend">${legend}</div>
     </div>
 
     <div class="avoid">
-      <h3>計算内訳</h3>
-      <table>
-        <tr><td class="k">額面合計</td><td class="n">${fmt(r.額面合計)} 万円</td></tr>
+      <h3>お金の流れ（単位：万円）</h3>
+      <table class="flow">
+        <tr class="hd"><td></td><td class="n">1年間</td><td class="n mo">月あたり</td></tr>
+        ${row('収入（税金・保険料を引く前）', gross, 'strong')}
         ${incomeRows}
-        <tr><td class="k">社会保険料</td><td class="n">− ${fmt(r.社保合計)} 万円</td></tr>
+        ${row('社会保険料', r.社保合計, 'strong', '− ')}
         ${shahoSub}
-        <tr><td class="k">所得税（復興特別所得税を含む）</td><td class="n">− ${fmt(r.所得税)} 万円</td></tr>
-        <tr><td class="k">住民税</td><td class="n">− ${fmt(r.住民税)} 万円</td></tr>
-        ${r.事業税>0 ? `<tr><td class="k">個人事業税</td><td class="n">− ${fmt(r.事業税)} 万円</td></tr>` : ''}
-        ${r.寄附>0 ? `<tr><td class="k">ふるさと納税の寄附（減税分は税額に反映済み）</td><td class="n">− ${fmt(r.寄附)} 万円</td></tr>` : ''}
-        <tr class="total"><td>年間手取り収入（概算）</td><td class="n">${fmt(r.手取り)} 万円</td></tr>
+        ${row('所得税（復興特別所得税を含む）', r.所得税, 'strong', '− ')}
+        ${row('住民税', r.住民税, 'strong', '− ')}
+        ${r.事業税>0 ? row('個人事業税', r.事業税, 'strong', '− ') : ''}
+        ${r.寄附>0 ? row('ふるさと納税の寄附（税金が減る分は上の税額に反映済み）', r.寄附, 'strong', '− ') : ''}
+        <tr class="total"><td>手取り</td><td class="n">${fmt(r.手取り)}</td><td class="n mo">${m12(r.手取り)}</td></tr>
       </table>
-      <div style="font-size:9px;color:#8B8F86;margin-top:3px;">※給与・年金は収入（額面）、事業・雑は所得金額の合計を額面合計とし、社会保険料・税を差し引いて手取りを算出しています。給与所得控除・公的年金等控除は税金の計算にだけ使い、手取りからは引いていません。</div>
-    </div>
-
-    <div class="avoid">
-      <h3>参考</h3>
-      <table>${ref.map(([a,b])=>`<tr><td class="k">${a}</td><td class="${String(b).length>24?'':'n'}" style="${String(b).length>24?'font-size:10.5px;':''}">${esc(b)}</td></tr>`).join('')}</table>
+      ${stopNote}
+      <div class="rp-small">※収入は、給与は年収、年金は天引き前の受取額、事業・副業は売上から経費を引いた額を合計しています。月あたりは1年間の額を12で割った目安で、賞与の有無などにより実際の毎月の額とは異なります。</div>
     </div>
 
     ${allWarns(inp, r).map(w=>`<div class="rp-warn avoid">⚠ ${esc(w)}</div>`).join('')}
+
+    <div class="avoid">
+      <h3>参考</h3>
+      <div class="mcards">${meyasu}</div>
+    </div>
+
+    <div class="avoid">
+      <h3>計算の前提（入力した条件）</h3>
+      <table class="cond">${condRows}</table>
+    </div>
     ${r.注記.map(n=>`<div class="rp-info avoid">${esc(n)}</div>`).join('')}
 
     <div class="rp-note avoid">${esc($('disclaimerText').textContent.trim())}</div>
